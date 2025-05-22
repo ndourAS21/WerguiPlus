@@ -33,7 +33,7 @@ Ce projet s’inscrit dans le cadre du module de DevSecOps, dispensé à l’Éc
 - Notifications pour le suivi des traitements et des rendez-vous
 - Adaptation aux contraintes locales (notamment en termes de bande passante)
 
-## Architecture
+# Architecture
 
 L’architecture repose sur un modèle multi-couche, assurant une séparation claire entre les couches de présentation (React.js), de logique métier (Django) et de persistance des données (PostgreSQL). L’API est conçue selon une approche RESTful, permettant la scalabilité et la réutilisation des composants dans d’autres systèmes.
 
