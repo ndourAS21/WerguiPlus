@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="admin-container">
+    <div class="admin-header">
+        <h2><i class="fas fa-users-cog"></i> Gestion des Utilisateurs</h2>
+        <div class="admin-actions">
+            <a href="{% url 'create_user' %}" class="btn btn-primary">
+                <i class="fas fa-user-plus"></i> Nouvel Utilisateur
+            </a>
+            <div class="search-bar">
+                <input type="text" placeholder="Rechercher un utilisateur..." class="search-input">
+                <button class="search-btn"><i class="fas fa-search"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <div class="user-management">
+        <div class="user-filters">
+            <div class="filter-group">
+                <label for="role-filter">Filtrer par rôle :</label>
+                <select id="role-filter" class="filter-select">
+                    <option value="all">Tous les rôles</option>
+                    <option value="DOCTOR">Médecins</option>
+                    <option value="NURSE">Infirmiers</option>
+                    <option value="PHARMACIST">Pharmaciens</option>
+                    <option value="ADMIN">Administrateurs</option>
+                    <option value="PATIENT">Patients</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="status-filter">Statut :</label>
+                <select id="status-filter" class="filter-select">
+                    <option value="all">Tous</option>
+                    <option value="active">Actifs</option>
+                    <option value="inactive">Inactifs</option>
+                    <option value="locked">Bloqués</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="users-table-container">
+            <table class="users-table">
+                <thead>
+                    <tr>
+                        <th>Nom</th>
+                        <th>Rôle</th>
+                        <th>Email</th>
+                        <th>Téléphone</th>
+                        <th>Dernière connexion</th>
+                        <th>Statut</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <td>
+                            <div class="user-avatar">
+                                <i class="fas fa-user-circle"></i>
+                                <span>{{ user.get_full_name }}</span>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="role-badge {{ user.role|lower }}">
+                                {{ user.get_role_display }}
+                            </span>
+                        </td>
+                        <td>{{ user.email }}</td>
+                        <td>{{ user.phone_number }}</td>
+                        <td>{{ user.last_login|date:"d/m/Y H:i"|default:"Jamais" }}</td>
+                        <td>
+                            {% if user.is_active %}
+                            <span class="status-badge active">
+                                <i class="fas fa-check-circle"></i> Actif
+                            </span>
+                            {% else %}
+                            <span class="status-badge inactive">
+                                <i class="fas fa-times-circle"></i> Inactif
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="user-actions">
+                                <a href="{% url 'edit_user' user.id %}" class="btn-action btn-edit" title="Modifier">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                {% if user.is_active %}
+                                <a href="{% url 'deactivate_user' user.id %}" class="btn-action btn-deactivate" title="Désactiver">
+                                    <i class="fas fa-user-slash"></i>
+                                </a>
+                                {% else %}
+                                <a href="{% url 'activate_user' user.id %}" class="btn-action btn-activate" title="Activer">
+                                    <i class="fas fa-user-check"></i>
+                                </a>
+                                {% endif %}
+                                <a href="{% url 'reset_password' user.id %}" class="btn-action btn-reset" title="Réinitialiser mot de passe">
+                                    <i class="fas fa-key"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="pagination">
+            <span class="step-links">
+                {% if users.has_previous %}
+                    <a href="?page=1" class="page-link">&laquo; Première</a>
+                    <a href="?page={{ users.previous_page_number }}" class="page-link">Précédente</a>
+                {% endif %}
+
+                <span class="current">
+                    Page {{ users.number }} sur {{ users.paginator.num_pages }}
+                </span>
+
+                {% if users.has_next %}
+                    <a href="?page={{ users.next_page_number }}" class="page-link">Suivante</a>
+                    <a href="?page={{ users.paginator.num_pages }}" class="page-link">Dernière &raquo;</a>
+                {% endif %}
+            </span>
+        </div>
+    </div>
+</div>
+{% endblock %}

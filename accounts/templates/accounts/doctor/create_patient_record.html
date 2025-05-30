@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="form-container">
+    <h2>Créer un nouveau dossier patient</h2>
+    <form method="post">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <h3>Informations de compte</h3>
+            <input type="text" name="username" placeholder="Nom d'utilisateur" required>
+            <input type="password" name="password" placeholder="Mot de passe" required>
+        </div>
+        
+        <div class="form-group">
+            <h3>Informations personnelles</h3>
+            <input type="text" name="first_name" placeholder="Prénom" required>
+            <input type="text" name="last_name" placeholder="Nom" required>
+            <input type="text" name="phone_number" placeholder="Téléphone (+221...)" required>
+        </div>
+        
+        <div class="form-group">
+            <h3>Dossier médical</h3>
+            <textarea name="medical_history" placeholder="Antécédents médicaux" required></textarea>
+            <textarea name="allergies" placeholder="Allergies connues"></textarea>
+            <textarea name="current_medications" placeholder="Médicaments actuels"></textarea>
+        </div>
+        
+        <button type="submit" class="btn btn-primary">Enregistrer</button>
+        <a href="{% url 'view_patient_records' %}" class="btn btn-secondary">Annuler</a>
+    </form>
+</div>
+
+<style>
+    .form-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    .form-group h3 {
+        margin-bottom: 10px;
+        color: #4a6fa5;
+    }
+    
+    input, textarea {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
+    
+    textarea {
+        min-height: 100px;
+    }
+</style>
+{% endblock %}

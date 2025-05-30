@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="doctor-container">
+    <div class="doctor-header">
+        <h2><i class="fas fa-file-prescription"></i> Ordonnances</h2>
+        <div class="header-actions">
+            <a href="{% url 'create_prescription' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Nouvelle Ordonnance
+            </a>
+        </div>
+    </div>
+
+    <div class="filter-bar">
+        <div class="filter-group">
+            <label for="status-filter">Statut :</label>
+            <select id="status-filter" class="filter-select">
+                <option value="all">Toutes</option>
+                <option value="active">Actives</option>
+                <option value="expired">Expirées</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label for="patient-filter">Patient :</label>
+            <select id="patient-filter" class="filter-select">
+                <option value="all">Tous les patients</option>
+                {% for patient in patients %}
+                <option value="{{ patient.id }}">{{ patient.get_full_name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+
+    <div class="prescription-list">
+        {% for prescription in prescriptions %}
+        <div class="prescription-card {% if prescription.is_expired %}expired{% endif %}">
+            <div class="prescription-header">
+                <h3>Ordonnance #{{ prescription.id }}</h3>
+                <span class="prescription-date">{{ prescription.created_at|date:"d/m/Y" }}</span>
+                <span class="prescription-status">
+                    {% if prescription.is_expired %}
+                    <i class="fas fa-exclamation-triangle"></i> Expirée
+                    {% else %}
+                    <i class="fas fa-check-circle"></i> Active
+                    {% endif %}
+                </span>
+            </div>
+            
+            <div class="prescription-patient">
+                <i class="fas fa-user"></i> {{ prescription.patient.get_full_name }}
+            </div>
+            
+            <div class="prescription-medications">
+                <h4><i class="fas fa-pills"></i> Médicaments :</h4>
+                <ul>
+                    {% for med in prescription.medications.all %}
+                    <li>
+                        <strong>{{ med.name }}</strong> - {{ med.dosage }}
+                        <p>{{ med.instructions }}</p>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            
+            <div class="prescription-actions">
+                <a href="{% url 'print_prescription' prescription.id %}" class="btn btn-print">
+                    <i class="fas fa-print"></i> Imprimer
+                </a>
+                <a href="{% url 'edit_prescription' prescription.id %}" class="btn btn-edit">
+                    <i class="fas fa-edit"></i> Modifier
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

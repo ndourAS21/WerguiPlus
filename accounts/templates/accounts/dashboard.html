@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h2>{{ title }}</h2>
+    <div class="user-info">
+        <span class="role-badge">{{ role_display }}</span>
+        <p>Bienvenue, <strong>{{ user.get_full_name }}</strong>!</p>
+        {% if last_login %}
+        <small>Dernière connexion: {{ last_login|date:"d/m/Y H:i" }}</small>
+        {% endif %}
+    </div>
+</div>
+
+<div class="dashboard-grid">
+    {% for card in cards %}
+    <div class="dashboard-card">
+        <h3>{{ card.title }}</h3>
+        <div class="card-actions">
+            {% for button in card.buttons %}
+            <a href="{% url button.url %}" class="btn {{ button.class }}">{{ button.text }}</a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<style>
+    .dashboard-header {
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .user-info {
+        margin-top: 1rem;
+    }
+    
+    .role-badge {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        background-color: #4a6fa5;
+        color: white;
+        border-radius: 4px;
+        font-size: 0.9rem;
+    }
+    
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1.5rem;
+    }
+    
+    .dashboard-card {
+        padding: 1.5rem;
+        border-radius: 8px;
+        background: white;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .dashboard-card h3 {
+        margin-top: 0;
+        margin-bottom: 1rem;
+        color: #333;
+    }
+    
+    .card-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    
+    .btn {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+        text-decoration: none;
+        font-size: 0.9rem;
+        transition: all 0.2s;
+    }
+    
+    .btn-primary {
+        background-color: #4a6fa5;
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        background-color: #3a5a8f;
+    }
+    
+    .btn-secondary {
+        background-color: #f0f0f0;
+        color: #333;
+        border: 1px solid #ddd;
+    }
+    
+    .btn-secondary:hover {
+        background-color: #e0e0e0;
+    }
+    
+    .btn-emergency {
+        background-color: #d9534f;
+        color: white;
+    }
+    
+    .btn-emergency:hover {
+        background-color: #c9302c;
+    }
+</style>
+{% endblock %}

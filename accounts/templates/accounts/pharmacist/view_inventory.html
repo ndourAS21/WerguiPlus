@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="pharmacist-container">
+    <div class="pharmacist-header">
+        <h2><i class="fas fa-warehouse"></i> Gestion du Stock</h2>
+        <div class="inventory-stats">
+            <div class="stat-card">
+                <i class="fas fa-pills"></i>
+                <div>
+                    <h3>{{ total_medications }}</h3>
+                    <p>Médicaments</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-box-open"></i>
+                <div>
+                    <h3>{{ low_stock_count }}</h3>
+                    <p>Stocks Critiques</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-times-circle"></i>
+                <div>
+                    <h3>{{ out_of_stock_count }}</h3>
+                    <p>Ruptures</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="inventory-controls">
+        <div class="search-bar">
+            <input type="text" placeholder="Rechercher un médicament..." class="search-input">
+            <button class="search-btn"><i class="fas fa-search"></i></button>
+        </div>
+        <div class="filter-group">
+            <label for="stock-filter">Filtrer :</label>
+            <select id="stock-filter" class="filter-select">
+                <option value="all">Tous</option>
+                <option value="low">Stocks bas</option>
+                <option value="out">Ruptures</option>
+                <option value="expiring">Périmés bientôt</option>
+            </select>
+        </div>
+        <a href="{% url 'request_reorder' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Nouvelle Commande
+        </a>
+    </div>
+
+    <div class="inventory-table-container">
+        <table class="inventory-table">
+            <thead>
+                <tr>
+                    <th>Médicament</th>
+                    <th>Dosage</th>
+                    <th>Stock</th>
+                    <th>Seuil d'alerte</th>
+                    <th>Dernière Commande</th>
+                    <th>Date d'expiration</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for med in medications %}
+                <tr class="{% if med.stock == 0 %}out-of-stock{% elif med.stock <= med.alert_threshold %}low-stock{% endif %}">
+                    <td>
+                        <strong>{{ med.name }}</strong>
+                        <small>{{ med.code }}</small>
+                    </td>
+                    <td>{{ med.dosage }}</td>
+                    <td>
+                        <div class="stock-bar-container">
+                            <div class="stock-bar" style="width: {% widthratio med.stock med.max_stock 100 %}%"></div>
+                            <span>{{ med.stock }} unités</span>
+                        </div>
+                    </td>
+                    <td>{{ med.alert_threshold }}</td>
+                    <td>{{ med.last_order_date|date:"d/m/Y"|default:"-" }}</td>
+                    <td class="{% if med.is_expiring_soon %}expiring{% endif %}">
+                        {{ med.expiry_date|date:"d/m/Y" }}
+                        {% if med.is_expired %}
+                        <span class="expired-badge">Expiré</span>
+                        {% elif med.is_expiring_soon %}
+                        <span class="expiring-badge">Bientôt</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <button class="btn btn-small btn-order" data-med="{{ med.id }}">
+                            <i class="fas fa-shopping-cart"></i>
+                        </button>
+                        <button class="btn btn-small btn-edit" data-med="{{ med.id }}">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="pagination">
+        <span class="step-links">
+            {% if medications.has_previous %}
+                <a href="?page=1" class="page-link">&laquo; Première</a>
+                <a href="?page={{ medications.previous_page_number }}" class="page-link">Précédente</a>
+            {% endif %}
+
+            <span class="current">
+                Page {{ medications.number }} sur {{ medications.paginator.num_pages }}
+            </span>
+
+            {% if medications.has_next %}
+                <a href="?page={{ medications.next_page_number }}" class="page-link">Suivante</a>
+                <a href="?page={{ medications.paginator.num_pages }}" class="page-link">Dernière &raquo;</a>
+            {% endif %}
+        </span>
+    </div>
+</div>
+{% endblock %}

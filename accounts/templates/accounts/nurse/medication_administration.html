@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="nurse-container">
+    <div class="nurse-header">
+        <h2><i class="fas fa-syringe"></i> Administration des Médicaments</h2>
+        <div class="patient-info">
+            <div class="patient-avatar">
+                <i class="fas fa-user-circle"></i>
+            </div>
+            <div>
+                <h3>{{ patient.get_full_name }}</h3>
+                <p><i class="fas fa-id-badge"></i> {{ patient.id_number }} | <i class="fas fa-bed"></i> Chambre {{ patient.room_number }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="medication-board">
+        <div class="pending-medications">
+            <h3><i class="fas fa-clock"></i> Médicaments en Attente</h3>
+            {% for med in pending_meds %}
+            <div class="medication-card">
+                <div class="med-info">
+                    <h4>{{ med.medication.name }}</h4>
+                    <p>{{ med.medication.dosage }}</p>
+                    <p class="prescription-info">Prescrit par Dr. {{ med.prescription.doctor.last_name }} à {{ med.scheduled_time|time }}</p>
+                </div>
+                <div class="med-actions">
+                    <button class="btn btn-administer" data-medication="{{ med.id }}">
+                        <i class="fas fa-syringe"></i> Administrer
+                    </button>
+                    <button class="btn btn-delay" data-medication="{{ med.id }}">
+                        <i class="fas fa-clock"></i> Reporter
+                    </button>
+                </div>
+            </div>
+            {% empty %}
+            <div class="empty-state">
+                <i class="fas fa-check-circle"></i>
+                <p>Aucun médicament en attente pour ce patient</p>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="administered-medications">
+            <h3><i class="fas fa-check-circle"></i> Historique d'Administration</h3>
+            {% for med in administered_meds %}
+            <div class="medication-card">
+                <div class="med-info">
+                    <h4>{{ med.medication.name }}</h4>
+                    <p>{{ med.medication.dosage }}</p>
+                    <p class="administered-info">
+                        Administré à {{ med.administered_time|time }} par {{ med.administered_by.get_full_name }}
+                    </p>
+                </div>
+                <div class="med-notes">
+                    <p><strong>Notes :</strong> {{ med.notes|default:"Aucune note" }}</p>
+                </div>
+            </div>
+            {% empty %}
+            <div class="empty-state">
+                <i class="fas fa-history"></i>
+                <p>Aucun médicament administré récemment</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Modal d'administration -->
+    <div class="modal" id="administerModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-syringe"></i> Confirmer l'Administration</h3>
+                <button class="close-modal">&times;</button>
+            </div>
+            <form method="post" class="modal-form">
+                {% csrf_token %}
+                <input type="hidden" name="medication_id" id="medicationId">
+                
+                <div class="form-group">
+                    <label for="administered_time">Heure réelle d'administration</label>
+                    <input type="time" name="administered_time" id="administered_time" required class="form-input" value="{% now 'H:i' %}">
+                </div>
+                
+                <div class="form-group">
+                    <label for="notes">Notes d'administration</label>
+                    <textarea name="notes" id="notes" class="form-textarea" placeholder="Réaction du patient, observations..."></textarea>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-confirm">
+                        <i class="fas fa-check"></i> Confirmer
+                    </button>
+                    <button type="button" class="btn btn-cancel close-modal">
+                        <i class="fas fa-times"></i> Annuler
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.querySelectorAll('.btn-administer').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const medId = this.dataset.medication;
+        document.getElementById('medicationId').value = medId;
+        document.getElementById('administerModal').style.display = 'flex';
+    });
+});
+
+document.querySelectorAll('.close-modal').forEach(btn => {
+    btn.addEventListener('click', function() {
+        document.getElementById('administerModal').style.display = 'none';
+    });
+});
+</script>
+{% endblock %}

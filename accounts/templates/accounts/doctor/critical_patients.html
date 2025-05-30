@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="emergency-container">
+    <div class="emergency-header">
+        <h2><i class="fas fa-heartbeat"></i> Patients en État Critique</h2>
+        <div class="emergency-alert">
+            <i class="fas fa-bell"></i> {{ critical_count }} patient(s) nécessitant une attention immédiate
+        </div>
+    </div>
+
+    <div class="critical-patients-grid">
+        {% for patient in critical_patients %}
+        <div class="critical-patient-card" data-priority="{{ patient.priority }}">
+            <div class="patient-status">
+                <div class="status-indicator {{ patient.priority }}"></div>
+                <span class="priority">Priorité {{ patient.priority }}</span>
+            </div>
+            
+            <div class="patient-info">
+                <h3>{{ patient.get_full_name }}</h3>
+                <p><i class="fas fa-bed"></i> {{ patient.location }}</p>
+                <p><i class="fas fa-clock"></i> Dernière mise à jour: {{ patient.last_update|timesince }}</p>
+            </div>
+            
+            <div class="patient-vitals">
+                <div class="vital-item">
+                    <span class="vital-label">FC</span>
+                    <span class="vital-value {% if patient.heart_rate > 100 or patient.heart_rate < 60 %}critical{% endif %}">
+                        {{ patient.heart_rate }} <small>bpm</small>
+                    </span>
+                </div>
+                <div class="vital-item">
+                    <span class="vital-label">TA</span>
+                    <span class="vital-value {% if patient.blood_pressure_systolic > 140 or patient.blood_pressure_diastolic > 90 %}critical{% endif %}">
+                        {{ patient.blood_pressure_systolic }}/{{ patient.blood_pressure_diastolic }}
+                    </span>
+                </div>
+                <div class="vital-item">
+                    <span class="vital-label">SpO2</span>
+                    <span class="vital-value {% if patient.oxygen_saturation < 92 %}critical{% endif %}">
+                        {{ patient.oxygen_saturation }}%
+                    </span>
+                </div>
+            </div>
+            
+            <div class="patient-actions">
+                <a href="{% url 'view_patient_detail' patient.id %}" class="btn btn-view">
+                    <i class="fas fa-file-medical"></i> Dossier
+                </a>
+                <a href="{% url 'emergency_intervention' patient.id %}" class="btn btn-intervene">
+                    <i class="fas fa-first-aid"></i> Intervenir
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="emergency-notes">
+        <h3><i class="fas fa-clipboard-list"></i> Notes pour l'Équipe Médicale</h3>
+        <textarea class="team-notes" placeholder="Ajoutez des notes pour l'équipe soignante..."></textarea>
+        <button class="btn btn-save-notes">
+            <i class="fas fa-save"></i> Enregistrer les Notes
+        </button>
+    </div>
+</div>
+{% endblock %}

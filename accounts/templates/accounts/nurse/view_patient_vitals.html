@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="nurse-container">
+    <div class="nurse-header">
+        <h2><i class="fas fa-heartbeat"></i> Suivi des Constantes Vitales</h2>
+        <div class="patient-info">
+            <div class="patient-avatar">
+                <i class="fas fa-user-circle"></i>
+            </div>
+            <div>
+                <h3>{{ patient.get_full_name }}</h3>
+                <p><i class="fas fa-id-badge"></i> {{ patient.id_number }} | <i class="fas fa-bed"></i> Chambre {{ patient.room_number }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="vitals-container">
+        <div class="vitals-chart">
+            <h3><i class="fas fa-chart-line"></i> Historique des Constantes</h3>
+            <div class="chart-placeholder">
+                <!-- Graphique serait implémenté avec Chart.js ou autre -->
+                <p>Graphique d'évolution des constantes</p>
+            </div>
+        </div>
+        
+        <div class="vitals-current">
+            <h3><i class="fas fa-clock"></i> Dernières Mesures</h3>
+            <div class="vitals-grid">
+                <div class="vital-card">
+                    <div class="vital-icon temperature">
+                        <i class="fas fa-thermometer-half"></i>
+                    </div>
+                    <div class="vital-info">
+                        <h4>Température</h4>
+                        <p class="vital-value {% if last_vitals.temperature > 38 %}critical{% endif %}">
+                            {{ last_vitals.temperature|default:"--" }}°C
+                        </p>
+                        <p class="vital-time">{{ last_vitals.time|default:"" }}</p>
+                    </div>
+                </div>
+                
+                <div class="vital-card">
+                    <div class="vital-icon heart">
+                        <i class="fas fa-heart"></i>
+                    </div>
+                    <div class="vital-info">
+                        <h4>Fréquence Cardiaque</h4>
+                        <p class="vital-value {% if last_vitals.heart_rate > 100 or last_vitals.heart_rate < 50 %}critical{% endif %}">
+                            {{ last_vitals.heart_rate|default:"--" }} bpm
+                        </p>
+                        <p class="vital-time">{{ last_vitals.time|default:"" }}</p>
+                    </div>
+                </div>
+                
+                <div class="vital-card">
+                    <div class="vital-icon pressure">
+                        <i class="fas fa-tachometer-alt"></i>
+                    </div>
+                    <div class="vital-info">
+                        <h4>Tension Artérielle</h4>
+                        <p class="vital-value {% if last_vitals.systolic > 140 or last_vitals.diastolic > 90 %}critical{% endif %}">
+                            {{ last_vitals.systolic|default:"--" }}/{{ last_vitals.diastolic|default:"--" }} mmHg
+                        </p>
+                        <p class="vital-time">{{ last_vitals.time|default:"" }}</p>
+                    </div>
+                </div>
+                
+                <div class="vital-card">
+                    <div class="vital-icon oxygen">
+                        <i class="fas fa-lungs"></i>
+                    </div>
+                    <div class="vital-info">
+                        <h4>Saturation O₂</h4>
+                        <p class="vital-value {% if last_vitals.oxygen < 92 %}critical{% endif %}">
+                            {{ last_vitals.oxygen|default:"--" }}%
+                        </p>
+                        <p class="vital-time">{{ last_vitals.time|default:"" }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="vitals-actions">
+        <a href="{% url 'quick_vitals' patient.id %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Ajouter des Mesures
+        </a>
+        <a href="{% url 'patient_report' patient.id %}" class="btn btn-secondary">
+            <i class="fas fa-file-pdf"></i> Générer Rapport
+        </a>
+    </div>
+</div>
+{% endblock %}

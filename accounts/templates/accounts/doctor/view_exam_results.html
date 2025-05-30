@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="doctor-container">
+    <div class="doctor-header">
+        <h2><i class="fas fa-file-medical-alt"></i> Résultats d'Examens</h2>
+        <div class="search-bar">
+            <input type="text" placeholder="Rechercher un patient ou un examen..." class="search-input">
+            <button class="search-btn"><i class="fas fa-search"></i></button>
+        </div>
+    </div>
+
+    <div class="exam-tabs">
+        <button class="tab-btn active" data-tab="pending">En Attente</button>
+        <button class="tab-btn" data-tab="completed">Complétés</button>
+        <button class="tab-btn" data-tab="all">Tous</button>
+    </div>
+
+    <div class="exam-results-container">
+        {% for exam in exams %}
+        <div class="exam-result-card" data-status="{{ exam.status }}">
+            <div class="exam-header">
+                <h3>{{ exam.get_exam_type_display }}</h3>
+                <span class="exam-date">{{ exam.requested_at|date:"d/m/Y" }}</span>
+                <span class="exam-status {{ exam.status }}">
+                    {% if exam.status == 'PENDING' %}
+                    <i class="fas fa-hourglass-half"></i> En attente
+                    {% else %}
+                    <i class="fas fa-check-circle"></i> Complété
+                    {% endif %}
+                </span>
+            </div>
+            
+            <div class="exam-patient">
+                <i class="fas fa-user"></i> {{ exam.patient.get_full_name }}
+            </div>
+            
+            <div class="exam-details">
+                <p><strong>Demandé par :</strong> Dr. {{ exam.requested_by.last_name }}</p>
+                <p><strong>Urgence :</strong> {{ exam.get_urgency_display }}</p>
+                
+                {% if exam.status == 'COMPLETED' %}
+                <div class="exam-results">
+                    <h4><i class="fas fa-clipboard-check"></i> Résultats :</h4>
+                    <p>{{ exam.results|truncatechars:150 }}</p>
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="exam-actions">
+                <a href="{% url 'view_exam_detail' exam.id %}" class="btn btn-view">
+                    <i class="fas fa-eye"></i> Détails
+                </a>
+                {% if exam.status == 'COMPLETED' %}
+                <a href="{% url 'download_exam_results' exam.id %}" class="btn btn-download">
+                    <i class="fas fa-download"></i> Télécharger
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        // Gestion des onglets
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        
+        // Filtrage des résultats
+        const tab = this.dataset.tab;
+        document.querySelectorAll('.exam-result-card').forEach(card => {
+            if (tab === 'all' || card.dataset.status.toLowerCase() === tab) {
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="hero">
+    <div class="hero-content">
+        <h2>Plateforme Médicale Sécurisée</h2>
+        <p>Gestion des dossiers médicaux adaptée au contexte sénégalais</p>
+        <a href="{% url 'login' %}" class="btn btn-primary">Se Connecter</a>
+    </div>
+</section>
+
+<section class="features">
+    <div class="feature-card">
+        <h3>Accès Sécurisé</h3>
+        <p>Authentification multi-facteurs pour protéger les données sensibles</p>
+    </div>
+    <div class="feature-card">
+        <h3>Gestion des Rôles</h3>
+        <p>Contrôle d'accès granulaire basé sur les rôles professionnels</p>
+    </div>
+    <div class="feature-card">
+        <h3>Adapté au Sénégal</h3>
+        <p>Fonctionnement hors-ligne et synchronisation différée</p>
+    </div>
+</section>
+{% endblock %}

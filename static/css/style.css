@@ -1,0 +1,1374 @@
+/* Base Styles */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f5f7fa;
+    color: #333;
+    line-height: 1.6;
+}
+
+.container {
+    width: 90%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 15px;
+}
+
+/* Header */
+header {
+    background-color: #2c3e50;
+    color: white;
+    padding: 1rem 0;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+header h1 {
+    margin: 0;
+    font-size: 1.8rem;
+    display: inline-block;
+}
+
+nav {
+    display: inline-block;
+    float: right;
+}
+
+nav a {
+    color: white;
+    text-decoration: none;
+    margin-left: 1.5rem;
+    font-weight: 500;
+}
+
+nav a:hover {
+    text-decoration: underline;
+}
+
+/* Hero Section */
+.hero {
+    background: linear-gradient(rgba(44, 62, 80, 0.8), rgba(44, 62, 80, 0.8)), 
+                url('/static/images/medical-bg.jpg') no-repeat center center;
+    background-size: cover;
+    color: white;
+    padding: 5rem 0;
+    text-align: center;
+    border-radius: 8px;
+    margin: 2rem 0;
+}
+
+.hero-content h2 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+}
+
+.hero-content p {
+    font-size: 1.2rem;
+    margin-bottom: 2rem;
+}
+
+/* Features Section */
+.features {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    margin: 3rem 0;
+}
+
+.feature-card {
+    background: white;
+    border-radius: 8px;
+    padding: 1.5rem;
+    width: 30%;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    margin-bottom: 1.5rem;
+}
+
+.feature-card h3 {
+    color: #2c3e50;
+    margin-top: 0;
+}
+
+/* Auth Forms */
+.auth-container {
+    max-width: 500px;
+    margin: 3rem auto;
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.auth-container h2 {
+    margin-top: 0;
+    color: #2c3e50;
+    text-align: center;
+}
+
+.auth-form {
+    margin-top: 1.5rem;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+}
+
+/* Buttons */
+.btn {
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 4px;
+    font-size: 1rem;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background-color 0.3s;
+}
+
+.btn-primary {
+    background-color: #3498db;
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #2980b9;
+}
+
+.btn-secondary {
+    background-color: #2ecc71;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background-color: #27ae60;
+}
+
+/* Dashboard */
+.dashboard-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.dashboard-header h2 {
+    color: #2c3e50;
+}
+
+.dashboard-content {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+}
+
+.dashboard-card {
+    background: white;
+    border-radius: 8px;
+    padding: 1.5rem;
+    flex: 1 1 300px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.dashboard-card h3 {
+    margin-top: 0;
+    color: #2c3e50;
+}
+
+/* Messages */
+.messages {
+    margin: 1rem 0;
+}
+
+.alert {
+    padding: 0.75rem 1.25rem;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+}
+
+.alert-error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.alert-success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+/* Footer */
+footer {
+    background-color: #2c3e50;
+    color: white;
+    text-align: center;
+    padding: 1rem 0;
+    margin-top: 2rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .features {
+        flex-direction: column;
+    }
+    
+    .feature-card {
+        width: 100%;
+    }
+    
+    nav {
+        float: none;
+        display: block;
+        text-align: center;
+        margin-top: 1rem;
+    }
+    
+    nav a {
+        margin: 0 0.75rem;
+    }
+}
+
+
+/* Ajoutez ceci à votre fichier style.css */
+
+/* Styles généraux pour les interfaces médecin */
+.doctor-container {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+.doctor-header {
+    background: linear-gradient(135deg, #3498db, #2c3e50);
+    color: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.doctor-header h2 {
+    margin: 0;
+    font-size: 1.8rem;
+    display: flex;
+    align-items: center;
+}
+
+.doctor-header h2 i {
+    margin-right: 10px;
+}
+
+.subtitle {
+    font-size: 1rem;
+    opacity: 0.9;
+    margin: 0.5rem 0 0 0;
+    width: 100%;
+}
+
+/* Formulaires médicaux */
+.medical-form {
+    background: white;
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.form-section {
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid #eee;
+}
+
+.form-section h3 {
+    color: #2c3e50;
+    margin-top: 0;
+    display: flex;
+    align-items: center;
+}
+
+.form-section h3 i {
+    margin-right: 10px;
+    color: #3498db;
+}
+
+.form-row {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.form-row .form-group {
+    flex: 1;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: #34495e;
+}
+
+.form-input, .form-select, .form-textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+    transition: border 0.3s;
+}
+
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+    border-color: #3498db;
+    outline: none;
+}
+
+.form-textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+/* Boutons spécifiques */
+.btn-save {
+    background-color: #27ae60;
+    color: white;
+}
+
+.btn-save:hover {
+    background-color: #219653;
+}
+
+.btn-cancel {
+    background-color: #95a5a6;
+    color: white;
+}
+
+.btn-cancel:hover {
+    background-color: #7f8c8d;
+}
+
+.btn-add {
+    background-color: #3498db;
+    color: white;
+}
+
+.btn-add:hover {
+    background-color: #2980b9;
+}
+
+/* Styles pour les cartes de patients */
+.patient-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.patient-card {
+    background: white;
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    transition: transform 0.3s;
+    display: flex;
+    flex-direction: column;
+}
+
+.patient-card:hover {
+    transform: translateY(-5px);
+}
+
+.patient-avatar {
+    font-size: 3rem;
+    color: #3498db;
+    text-align: center;
+    margin-bottom: 1rem;
+}
+
+.patient-info {
+    flex: 1;
+}
+
+.patient-info h3 {
+    margin: 0 0 0.5rem 0;
+    color: #2c3e50;
+}
+
+.patient-info p {
+    margin: 0.3rem 0;
+    color: #7f8c8d;
+    display: flex;
+    align-items: center;
+}
+
+.patient-info i {
+    margin-right: 8px;
+    width: 20px;
+    text-align: center;
+}
+
+.patient-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.btn-view {
+    background-color: #3498db;
+    color: white;
+    flex: 1;
+}
+
+.btn-prescribe {
+    background-color: #e67e22;
+    color: white;
+    flex: 1;
+}
+
+/* Styles pour le mode urgence */
+.emergency-container {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+.emergency-header {
+    background: linear-gradient(135deg, #e74c3c, #c0392b);
+    color: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+}
+
+.warning-message {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 0.75rem;
+    border-radius: 4px;
+    margin: 1rem 0 0 0;
+    display: flex;
+    align-items: center;
+}
+
+.warning-message i {
+    margin-right: 10px;
+}
+
+.emergency-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.emergency-card {
+    background: white;
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.emergency-card.red-alert {
+    border-top: 4px solid #e74c3c;
+}
+
+.emergency-card.yellow-alert {
+    border-top: 4px solid #f39c12;
+}
+
+.emergency-card h3 {
+    margin-top: 0;
+    color: #2c3e50;
+    display: flex;
+    align-items: center;
+}
+
+.emergency-card h3 i {
+    margin-right: 10px;
+}
+
+.emergency-card p {
+    color: #7f8c8d;
+    margin: 0.5rem 0 1rem 0;
+}
+
+.btn-emergency {
+    background-color: #e74c3c;
+    color: white;
+    width: 100%;
+}
+
+.btn-emergency:hover {
+    background-color: #c0392b;
+}
+
+.btn-warning {
+    background-color: #f39c12;
+    color: white;
+    width: 100%;
+}
+
+.btn-warning:hover {
+    background-color: #d35400;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .form-row {
+        flex-direction: column;
+        gap: 0;
+    }
+    
+    .doctor-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .search-bar {
+        margin-top: 1rem;
+        width: 100%;
+    }
+}
+
+
+/* Styles spécifiques pour les infirmiers */
+.nurse-container {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+.nurse-header {
+    background: linear-gradient(135deg, #3498db, #2980b9);
+    color: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+}
+
+.nurse-header h2 {
+    margin: 0;
+    display: flex;
+    align-items: center;
+}
+
+.nurse-header h2 i {
+    margin-right: 10px;
+}
+
+.subtitle {
+    font-size: 1rem;
+    opacity: 0.9;
+    margin: 0.5rem 0 0 0;
+}
+
+/* Styles pour les formulaires infirmiers */
+.nurse-form {
+    background: white;
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+/* Styles pour les cartes de constantes vitales */
+.vitals-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.vital-card {
+    background: white;
+    border-radius: 8px;
+    padding: 1rem;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+}
+
+.vital-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1rem;
+    color: white;
+    font-size: 1.2rem;
+}
+
+.vital-icon.temperature { background-color: #e74c3c; }
+.vital-icon.heart { background-color: #9b59b6; }
+.vital-icon.pressure { background-color: #3498db; }
+.vital-icon.oxygen { background-color: #2ecc71; }
+
+.vital-value {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin: 0.3rem 0;
+}
+
+.vital-value.critical {
+    color: #e74c3c;
+}
+
+.vital-time {
+    font-size: 0.8rem;
+    color: #7f8c8d;
+}
+
+/* Styles spécifiques pour les pharmaciens */
+.pharmacist-container {
+    max-width: 1400px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+.pharmacist-header {
+    background: linear-gradient(135deg, #9b59b6, #8e44ad);
+    color: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+}
+
+.inventory-stats {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+}
+
+.stat-card {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    padding: 0.75rem 1rem;
+    display: flex;
+    align-items: center;
+    min-width: 150px;
+}
+
+.stat-card i {
+    font-size: 1.5rem;
+    margin-right: 1rem;
+}
+
+.stat-card h3 {
+    margin: 0;
+    font-size: 1.5rem;
+}
+
+.stat-card p {
+    margin: 0;
+    font-size: 0.9rem;
+    opacity: 0.9;
+}
+
+/* Styles pour les tableaux */
+.inventory-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+
+.inventory-table th, .inventory-table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+.inventory-table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+}
+
+.inventory-table tr:hover {
+    background-color: #f8f9fa;
+}
+
+.inventory-table tr.out-of-stock {
+    background-color: #ffebee;
+}
+
+.inventory-table tr.low-stock {
+    background-color: #fff8e1;
+}
+
+.stock-bar-container {
+    width: 100%;
+    background-color: #f5f5f5;
+    border-radius: 4px;
+    height: 24px;
+    position: relative;
+}
+
+.stock-bar {
+    height: 100%;
+    border-radius: 4px;
+    background-color: #4caf50;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.stock-bar-container span {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    text-align: center;
+    line-height: 24px;
+    color: white;
+    font-size: 0.8rem;
+    text-shadow: 0 0 2px rgba(0,0,0,0.5);
+}
+
+/* Styles pour les modaux */
+.alternative-modal, .administration-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.5);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 8px;
+    padding: 2rem;
+    width: 90%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .vitals-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .inventory-table {
+        display: block;
+        overflow-x: auto;
+    }
+    
+    .order-container {
+        flex-direction: column;
+    }
+    
+    .medication-selection, .order-summary {
+        width: 100%;
+    }
+}
+
+
+/* Styles spécifiques pour l'administration */
+.admin-container {
+    max-width: 1400px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+.admin-header {
+    background: linear-gradient(135deg, #2c3e50, #34495e);
+    color: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+}
+
+.admin-header h2 {
+    margin: 0;
+    display: flex;
+    align-items: center;
+}
+
+.admin-header h2 i {
+    margin-right: 10px;
+}
+
+.admin-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.search-bar {
+    display: flex;
+    align-items: center;
+}
+
+.search-input {
+    padding: 0.5rem 1rem;
+    border: 1px solid #ddd;
+    border-radius: 4px 0 0 4px;
+    font-size: 1rem;
+}
+
+.search-btn {
+    background-color: #3498db;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 0 4px 4px 0;
+    cursor: pointer;
+}
+
+.date-range {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.date-input {
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+/* Styles pour les tableaux */
+.users-table, .audit-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+
+.users-table th, .users-table td,
+.audit-table th, .audit-table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+.users-table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+}
+
+.users-table tr:hover {
+    background-color: #f8f9fa;
+}
+
+.user-avatar {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.user-avatar i {
+    font-size: 1.5rem;
+    color: #7f8c8d;
+}
+
+.role-badge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: white;
+}
+
+.role-badge.doctor { background-color: #3498db; }
+.role-badge.nurse { background-color: #9b59b6; }
+.role-badge.pharmacist { background-color: #e67e22; }
+.role-badge.admin { background-color: #2c3e50; }
+.role-badge.patient { background-color: #27ae60; }
+
+.status-badge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.status-badge.active {
+    background-color: #d5f5e3;
+    color: #27ae60;
+}
+
+.status-badge.inactive {
+    background-color: #fadbd8;
+    color: #e74c3c;
+}
+
+.user-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.btn-action {
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 0.25rem;
+}
+
+.btn-edit { color: #3498db; }
+.btn-deactivate { color: #e74c3c; }
+.btn-activate { color: #27ae60; }
+.btn-reset { color: #f39c12; }
+
+/* Styles pour les logs d'audit */
+.audit-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 8px;
+    padding: 1rem;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.stat-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background-color: #3498db;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+}
+
+.stat-info h3 {
+    margin: 0;
+    font-size: 1.5rem;
+}
+
+.stat-info p {
+    margin: 0.25rem 0 0 0;
+    color: #7f8c8d;
+    font-size: 0.9rem;
+}
+
+.log-entry {
+    background: white;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.log-entry.critical {
+    border-left: 4px solid #e74c3c;
+}
+
+.log-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+}
+
+.log-action {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: white;
+}
+
+.log-action.create { background-color: #27ae60; }
+.log-action.update { background-color: #3498db; }
+.log-action.delete { background-color: #e74c3c; }
+.log-action.access { background-color: #9b59b6; }
+.log-action.security { background-color: #f39c12; }
+
+.log-timestamp {
+    color: #7f8c8d;
+    font-size: 0.9rem;
+}
+
+.log-user {
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+.user-role {
+    display: inline-block;
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    margin-left: 0.5rem;
+    background-color: #f2f3f4;
+    color: #34495e;
+}
+
+.log-details p {
+    margin: 0.25rem 0;
+    font-size: 0.9rem;
+}
+
+/* Styles spécifiques pour les patients */
+.patient-container {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+.patient-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.patient-profile {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.avatar i {
+    font-size: 3rem;
+    color: #3498db;
+}
+
+.profile-info h2 {
+    margin: 0;
+    color: #2c3e50;
+}
+
+.medical-record-tabs {
+    display: flex;
+    border-bottom: 1px solid #ddd;
+    margin-bottom: 1.5rem;
+}
+
+.tab-btn {
+    padding: 0.75rem 1.5rem;
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    cursor: pointer;
+    font-weight: 500;
+    color: #7f8c8d;
+}
+
+.tab-btn.active {
+    color: #3498db;
+    border-bottom-color: #3498db;
+}
+
+.tab-pane {
+    display: none;
+}
+
+.tab-pane.active {
+    display: block;
+}
+
+.info-card {
+    background: white;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.info-card h3 {
+    margin-top: 0;
+    color: #2c3e50;
+    display: flex;
+    align-items: center;
+}
+
+.info-card h3 i {
+    margin-right: 10px;
+    color: #3498db;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.info-label {
+    font-size: 0.9rem;
+    color: #7f8c8d;
+}
+
+.info-value {
+    font-weight: 500;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .admin-actions {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .users-table, .audit-table {
+        display: block;
+        overflow-x: auto;
+    }
+    
+    .medical-record-tabs {
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+    
+    .info-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Styles pour medication_administration.html */
+.medication-board {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+.pending-medications, .administered-medications {
+    background: white;
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.medication-card {
+    background: #f8f9fa;
+    border-radius: 6px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.med-info h4 {
+    margin: 0 0 0.25rem 0;
+    color: #2c3e50;
+}
+
+.prescription-info, .administered-info {
+    font-size: 0.8rem;
+    color: #7f8c8d;
+    margin: 0.25rem 0;
+}
+
+.med-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.btn-administer {
+    background-color: #27ae60;
+    color: white;
+}
+
+.btn-delay {
+    background-color: #f39c12;
+    color: white;
+}
+
+/* Styles pour quick_vitals.html */
+.vitals-form {
+    background: white;
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.vitals-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.vital-input label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: #2c3e50;
+}
+
+.vital-input label i {
+    margin-right: 8px;
+    width: 20px;
+    text-align: center;
+    color: #3498db;
+}
+
+/* Styles pour security_settings.html et system_config.html */
+.security-tabs, .system-tabs {
+    display: flex;
+    border-bottom: 1px solid #ddd;
+    margin-bottom: 1.5rem;
+}
+
+.tab-btn {
+    padding: 0.75rem 1.5rem;
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    cursor: pointer;
+    font-weight: 500;
+    color: #7f8c8d;
+}
+
+.tab-btn.active {
+    color: #3498db;
+    border-bottom-color: #3498db;
+}
+
+.toggle-group {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 34px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+}
+
+input:checked + .slider {
+    background-color: #27ae60;
+}
+
+input:focus + .slider {
+    box-shadow: 0 0 1px #27ae60;
+}
+
+input:checked + .slider:before {
+    transform: translateX(26px);
+}
+
+.slider.round {
+    border-radius: 34px;
+}
+
+.slider.round:before {
+    border-radius: 50%;
+}
+
+/* Styles pour view_appointments.html et book_appointment.html */
+.appointments-list {
+    margin-top: 1.5rem;
+}
+
+.appointment-card {
+    background: white;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    border-left: 4px solid #3498db;
+}
+
+.appointment-card.upcoming {
+    border-left-color: #27ae60;
+}
+
+.appointment-card.past {
+    border-left-color: #95a5a6;
+}
+
+.appointment-card.cancelled {
+    border-left-color: #e74c3c;
+}
+
+.appointment-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+}
+
+.appointment-date {
+    color: #7f8c8d;
+    font-weight: 500;
+}
+
+.appointment-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.btn-reschedule {
+    background-color: #f39c12;
+    color: white;
+}
+

@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="patient-container">
+    <div class="patient-header">
+        <h2><i class="fas fa-file-download"></i> Télécharger mon Dossier Médical</h2>
+        <p class="subtitle">Exportez vos informations médicales au format de votre choix</p>
+    </div>
+
+    <div class="download-options">
+        <div class="option-card">
+            <div class="option-icon">
+                <i class="fas fa-file-pdf"></i>
+            </div>
+            <h3>Format PDF</h3>
+            <p>Document lisible et imprimable</p>
+            <a href="{% url 'generate_pdf_record' %}" class="btn btn-download">
+                <i class="fas fa-download"></i> Télécharger PDF
+            </a>
+        </div>
+        
+        <div class="option-card">
+            <div class="option-icon">
+                <i class="fas fa-file-code"></i>
+            </div>
+            <h3>Format JSON</h3>
+            <p>Données structurées pour applications</p>
+            <a href="{% url 'generate_json_record' %}" class="btn btn-download">
+                <i class="fas fa-download"></i> Télécharger JSON
+            </a>
+        </div>
+        
+        <div class="option-card">
+            <div class="option-icon">
+                <i class="fas fa-file-excel"></i>
+            </div>
+            <h3>Format Excel</h3>
+            <p>Tableaux de données exploitables</p>
+            <a href="{% url 'generate_excel_record' %}" class="btn btn-download">
+                <i class="fas fa-download"></i> Télécharger Excel
+            </a>
+        </div>
+    </div>
+
+    <div class="download-settings">
+        <h3><i class="fas fa-cog"></i> Options d'Export</h3>
+        <form method="post" class="settings-form">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label for="date_range">Période :</label>
+                <select name="date_range" id="date_range" class="form-select">
+                    <option value="all">Toutes les données</option>
+                    <option value="1_year">Dernière année</option>
+                    <option value="2_years">2 dernières années</option>
+                    <option value="5_years">5 dernières années</option>
+                    <option value="custom">Personnalisée</option>
+                </select>
+            </div>
+            
+            <div class="form-row" id="custom-dates" style="display: none;">
+                <div class="form-group">
+                    <label for="start_date">De :</label>
+                    <input type="date" name="start_date" id="start_date" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label for="end_date">À :</label>
+                    <input type="date" name="end_date" id="end_date" class="form-input">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="include_types">Inclure :</label>
+                <div class="checkbox-group">
+                    <label><input type="checkbox" name="include_consultations" checked> Consultations</label>
+                    <label><input type="checkbox" name="include_prescriptions" checked> Prescriptions</label>
+                    <label><input type="checkbox" name="include_exams" checked> Examens</label>
+                    <label><input type="checkbox" name="include_vitals" checked> Constantes vitales</label>
+                </div>
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="btn btn-apply">
+                    <i class="fas fa-sync-alt"></i> Appliquer les Filtres
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.getElementById('date_range').addEventListener('change', function() {
+    if (this.value === 'custom') {
+        document.getElementById('custom-dates').style.display = 'flex';
+    } else {
+        document.getElementById('custom-dates').style.display = 'none';
+    }
+});
+</script>
+{% endblock %}

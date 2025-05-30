@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="auth-container">
+    <h2>Vérification en Deux Étapes</h2>
+    <p>Un code de vérification a été envoyé à votre numéro de téléphone associé.</p>
+    
+    <form method="post" class="auth-form">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="mfa_code">Code de vérification :</label>
+            <input type="text" id="mfa_code" name="mfa_code" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Vérifier</button>
+    </form>
+    
+    <p class="mfa-note">Si vous n'avez pas reçu de code, vérifiez votre numéro ou contactez l'administrateur.</p>
+</div>
+{% endblock %}

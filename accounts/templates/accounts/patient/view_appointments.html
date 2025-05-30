@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="patient-container">
+    <div class="patient-header">
+        <h2><i class="fas fa-calendar-alt"></i> Mes Rendez-vous</h2>
+        <div class="header-actions">
+            <a href="{% url 'book_appointment' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Nouveau Rendez-vous
+            </a>
+        </div>
+    </div>
+
+    <div class="appointments-tabs">
+        <button class="tab-btn active" data-tab="upcoming">À Venir</button>
+        <button class="tab-btn" data-tab="past">Passés</button>
+        <button class="tab-btn" data-tab="cancelled">Annulés</button>
+    </div>
+
+    <div class="appointments-list">
+        {% for appointment in upcoming_appointments %}
+        <div class="appointment-card upcoming">
+            <div class="appointment-header">
+                <h3>{{ appointment.doctor.get_full_name }}</h3>
+                <span class="appointment-date">
+                    {{ appointment.date|date:"l d F Y" }} à {{ appointment.time|time }}
+                </span>
+            </div>
+            
+            <div class="appointment-details">
+                <p><i class="fas fa-map-marker-alt"></i> {{ appointment.location }}</p>
+                <p><i class="fas fa-stethoscope"></i> {{ appointment.reason }}</p>
+                
+                {% if appointment.notes %}
+                <div class="appointment-notes">
+                    <p><i class="fas fa-notes-medical"></i> {{ appointment.notes }}</p>
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="appointment-actions">
+                <a href="{% url 'cancel_appointment' appointment.id %}" class="btn btn-cancel">
+                    <i class="fas fa-times"></i> Annuler
+                </a>
+                <a href="{% url 'reschedule_appointment' appointment.id %}" class="btn btn-reschedule">
+                    <i class="fas fa-calendar-alt"></i> Reporter
+                </a>
+            </div>
+        </div>
+        {% empty %}
+        <div class="empty-state">
+            <i class="fas fa-calendar-times"></i>
+            <p>Aucun rendez-vous à venir</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        
+        const tab = this.dataset.tab;
+        // Ici, vous implémenteriez le chargement des rendez-vous par catégorie
+        alert(`Chargement des rendez-vous ${tab}...`);
+    });
+});
+</script>
+{% endblock %}

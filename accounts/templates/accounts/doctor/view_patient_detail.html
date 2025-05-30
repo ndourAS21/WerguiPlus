@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="patient-detail-container">
+    <h2>Dossier médical de {{ patient.get_full_name }}</h2>
+    
+    <div class="patient-info">
+        <h3>Informations patient</h3>
+        <p><strong>Nom complet:</strong> {{ patient.get_full_name }}</p>
+        <p><strong>Téléphone:</strong> {{ patient.phone_number }}</p>
+    </div>
+    
+    <div class="medical-record">
+        <h3>Dossier médical</h3>
+        <div class="record-section">
+            <h4>Antécédents médicaux</h4>
+            <p>{{ record.medical_history|linebreaks }}</p>
+        </div>
+        
+        <div class="record-section">
+            <h4>Allergies</h4>
+            <p>{{ record.allergies|default:"Aucune allergie connue"|linebreaks }}</p>
+        </div>
+        
+        <div class="record-section">
+            <h4>Traitements actuels</h4>
+            <p>{{ record.current_medications|default:"Aucun traitement en cours"|linebreaks }}</p>
+        </div>
+    </div>
+    
+    <div class="prescriptions">
+        <h3>Prescriptions</h3>
+        {% if prescriptions %}
+            <table class="prescription-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Médicament</th>
+                        <th>Posologie</th>
+                        <th>Instructions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for prescription in prescriptions %}
+                    <tr>
+                        <td>{{ prescription.created_at|date:"d/m/Y" }}</td>
+                        <td>{{ prescription.medication }}</td>
+                        <td>{{ prescription.dosage }}</td>
+                        <td>{{ prescription.instructions|linebreaks }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>Aucune prescription disponible</p>
+        {% endif %}
+    </div>
+    
+    <div class="exams">
+        <h3>Examens médicaux</h3>
+        {% if exams %}
+            <table class="exam-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Type</th>
+                        <th>Statut</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for exam in exams %}
+                    <tr>
+                        <td>{{ exam.requested_at|date:"d/m/Y" }}</td>
+                        <td>{{ exam.get_exam_type_display }}</td>
+                        <td>
+                            {% if exam.completed_at %}
+                                Complété le {{ exam.completed_at|date:"d/m/Y" }}
+                            {% else %}
+                                En attente
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>Aucun examen médical</p>
+        {% endif %}
+    </div>
+    
+    <a href="{% url 'view_patient_records' %}" class="btn btn-secondary">Retour à la liste</a>
+</div>
+
+<style>
+    .patient-detail-container {
+        padding: 20px;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+    
+    .patient-info, .medical-record, .prescriptions, .exams {
+        margin-bottom: 30px;
+        padding: 15px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .record-section {
+        margin-bottom: 15px;
+    }
+    
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+    }
+    
+    th, td {
+        padding: 12px 15px;
+        border: 1px solid #ddd;
+        text-align: left;
+    }
+    
+    th {
+        background-color: #f5f5f5;
+    }
+</style>
+{% endblock %}

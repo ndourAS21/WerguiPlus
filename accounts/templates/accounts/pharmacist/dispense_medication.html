@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="pharmacist-container">
+    <div class="pharmacist-header">
+        <h2><i class="fas fa-prescription-bottle-alt"></i> Délivrance de Médicaments</h2>
+        <div class="prescription-info">
+            <p>Ordonnance #{{ prescription.id }} - Dr. {{ prescription.doctor.last_name }}</p>
+        </div>
+    </div>
+
+    <div class="prescription-details">
+        <div class="patient-info">
+            <div class="patient-avatar">
+                <i class="fas fa-user-circle"></i>
+            </div>
+            <div>
+                <h3>{{ prescription.patient.get_full_name }}</h3>
+                <p><i class="fas fa-birthday-cake"></i> {{ prescription.patient.birth_date|date:"d/m/Y" }}</p>
+                <p><i class="fas fa-phone"></i> {{ prescription.patient.phone_number }}</p>
+            </div>
+        </div>
+        
+        <div class="prescription-date">
+            <p><i class="fas fa-calendar-alt"></i> Date: {{ prescription.created_at|date:"d/m/Y" }}</p>
+            <p><i class="fas fa-stamp"></i> Statut: 
+                <span class="status-badge {% if prescription.is_dispensed %}dispensed{% else %}pending{% endif %}">
+                    {% if prescription.is_dispensed %}
+                    Délivrée
+                    {% else %}
+                    En attente
+                    {% endif %}
+                </span>
+            </p>
+        </div>
+    </div>
+
+    <div class="medication-list">
+        <h3><i class="fas fa-pills"></i> Médicaments Prescrits</h3>
+        
+        <table class="medication-table">
+            <thead>
+                <tr>
+                    <th>Médicament</th>
+                    <th>Dosage</th>
+                    <th>Quantité</th>
+                    <th>Disponibilité</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in prescription.medications.all %}
+                <tr>
+                    <td>{{ item.name }}</td>
+                    <td>{{ item.dosage }}</td>
+                    <td>{{ item.quantity }}</td>
+                    <td>
+                        <span class="stock-indicator {% if item.in_stock %}in-stock{% else %}out-of-stock{% endif %}">
+                            {% if item.in_stock %}
+                            <i class="fas fa-check"></i> En stock
+                            {% else %}
+                            <i class="fas fa-times"></i> Rupture
+                            {% endif %}
+                        </span>
+                    </td>
+                    <td>
+                        {% if item.in_stock %}
+                        <button class="btn btn-dispense" data-medication="{{ item.id }}">
+                            <i class="fas fa-check"></i> Délivrer
+                        </button>
+                        {% else %}
+                        <button class="btn btn-alternative" data-medication="{{ item.id }}">
+                            <i class="fas fa-exchange-alt"></i> Alternative
+                        </button>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="dispense-actions">
+        <button class="btn btn-complete" id="completeDispense" {% if not all_in_stock %}disabled{% endif %}>
+            <i class="fas fa-check-double"></i> Valider la Délivrance Complète
+        </button>
+        <a href="{% url 'view_prescriptions' %}" class="btn btn-cancel">
+            <i class="fas fa-times"></i> Retour
+        </a>
+    </div>
+
+    <div class="alternative-modal" id="alternativeModal">
+        <div class="modal-content">
+            <h3><i class="fas fa-exchange-alt"></i> Proposer une Alternative</h3>
+            <p>Pour le médicament: <strong id="altMedName"></strong></p>
+            
+            <form id="alternativeForm" method="post">
+                {% csrf_token %}
+                <input type="hidden" name="original_medication" id="originalMedication">
+                
+                <div class="form-group">
+                    <label for="alternative_med">Médicament alternatif</label>
+                    <select id="alternative_med" name="alternative_med" required class="form-select">
+                        <option value="">Sélectionner une alternative...</option>
+                        {% for med in alternatives %}
+                        <option value="{{ med.id }}">{{ med.name }} ({{ med.dosage }}) - Stock: {{ med.stock }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="alternative_notes">Notes pour le médecin</label>
+                    <textarea id="alternative_notes" name="alternative_notes" class="form-textarea" required placeholder="Raison de la substitution..."></textarea>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-confirm">
+                        <i class="fas fa-paper-plane"></i> Envoyer la Proposition
+                    </button>
+                    <button type="button" class="btn btn-cancel" id="cancelAlternative">
+                        <i class="fas fa-times"></i> Annuler
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.querySelectorAll('.btn-alternative').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const medicationId = this.dataset.medication;
+        const medicationName = this.closest('tr').querySelector('td:first-child').textContent;
+        
+        document.getElementById('altMedName').textContent = medicationName;
+        document.getElementById('originalMedication').value = medicationId;
+        document.getElementById('alternativeModal').style.display = 'flex';
+    });
+});
+
+document.getElementById('cancelAlternative').addEventListener('click', function() {
+    document.getElementById('alternativeModal').style.display = 'none';
+});
+</script>
+{% endblock %}

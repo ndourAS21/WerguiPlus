@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="nurse-container">
+    <div class="nurse-header">
+        <h2><i class="fas fa-pills"></i> Administration de Médicaments</h2>
+        <div class="patient-med-info">
+            <h3>{{ patient.get_full_name }}</h3>
+            <p><i class="fas fa-prescription-bottle-alt"></i> {{ prescriptions|length }} prescription(s) active(s)</p>
+        </div>
+    </div>
+
+    <div class="medication-list">
+        {% for prescription in prescriptions %}
+        <div class="medication-card">
+            <div class="medication-header">
+                <h4>{{ prescription.medication_name }}</h4>
+                <span class="medication-status {% if prescription.is_administered %}administered{% else %}pending{% endif %}">
+                    {% if prescription.is_administered %}
+                    <i class="fas fa-check-circle"></i> Administré
+                    {% else %}
+                    <i class="fas fa-clock"></i> En attente
+                    {% endif %}
+                </span>
+            </div>
+            
+            <div class="medication-details">
+                <p><strong>Posologie:</strong> {{ prescription.dosage }}</p>
+                <p><strong>Fréquence:</strong> {{ prescription.frequency }}</p>
+                <p><strong>Prochaine dose:</strong> {{ prescription.next_dose|time }}</p>
+            </div>
+            
+            <div class="medication-actions">
+                {% if not prescription.is_administered %}
+                <button class="btn btn-administer" data-prescription="{{ prescription.id }}">
+                    <i class="fas fa-syringe"></i> Administrer
+                </button>
+                {% endif %}
+                <button class="btn btn-notes" data-prescription="{{ prescription.id }}">
+                    <i class="fas fa-notes-medical"></i> Notes
+                </button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="administration-modal" id="administerModal">
+        <div class="modal-content">
+            <h3><i class="fas fa-syringe"></i> Confirmer l'Administration</h3>
+            <p>Vous êtes sur le point d'administrer <strong id="medName"></strong> à {{ patient.get_full_name }}</p>
+            
+            <form id="administerForm" method="post">
+                {% csrf_token %}
+                <input type="hidden" name="prescription_id" id="prescriptionId">
+                
+                <div class="form-group">
+                    <label for="administer_time">Heure d'administration</label>
+                    <input type="time" id="administer_time" name="administer_time" required class="form-input" value="{% now 'H:i' %}">
+                </div>
+                
+                <div class="form-group">
+                    <label for="administer_notes">Notes</label>
+                    <textarea id="administer_notes" name="administer_notes" class="form-textarea" placeholder="Réaction du patient, observations..."></textarea>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-confirm">
+                        <i class="fas fa-check"></i> Confirmer
+                    </button>
+                    <button type="button" class="btn btn-cancel" id="cancelAdminister">
+                        <i class="fas fa-times"></i> Annuler
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.querySelectorAll('.btn-administer').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const prescriptionId = this.dataset.prescription;
+        const medicationCard = this.closest('.medication-card');
+        const medName = medicationCard.querySelector('h4').textContent;
+        
+        document.getElementById('medName').textContent = medName;
+        document.getElementById('prescriptionId').value = prescriptionId;
+        document.getElementById('administerModal').style.display = 'flex';
+    });
+});
+
+document.getElementById('cancelAdminister').addEventListener('click', function() {
+    document.getElementById('administerModal').style.display = 'none';
+});
+</script>
+{% endblock %}

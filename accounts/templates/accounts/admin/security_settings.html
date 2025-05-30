@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="admin-container">
+    <div class="admin-header">
+        <h2><i class="fas fa-shield-alt"></i> Paramètres de Sécurité</h2>
+        <p class="subtitle">Configuration des politiques de sécurité du système</p>
+    </div>
+
+    <div class="security-tabs">
+        <button class="tab-btn active" data-tab="authentication">Authentification</button>
+        <button class="tab-btn" data-tab="password">Politique des Mots de Passe</button>
+        <button class="tab-btn" data-tab="session">Sessions</button>
+        <button class="tab-btn" data-tab="audit">Audit</button>
+    </div>
+
+    <form method="post" class="security-form">
+        {% csrf_token %}
+        
+        <div class="tab-pane active" id="authentication">
+            <div class="form-section">
+                <h3><i class="fas fa-user-lock"></i> Authentification Multi-Facteurs</h3>
+                <div class="form-group toggle-group">
+                    <label for="mfa_enabled">Activer l'authentification à deux facteurs</label>
+                    <label class="switch">
+                        <input type="checkbox" name="mfa_enabled" id="mfa_enabled" {% if settings.mfa_enabled %}checked{% endif %}>
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+                
+                <div class="form-group">
+                    <label for="mfa_method">Méthode d'authentification</label>
+                    <select name="mfa_method" id="mfa_method" class="form-select">
+                        <option value="sms" {% if settings.mfa_method == 'sms' %}selected{% endif %}>SMS</option>
+                        <option value="email" {% if settings.mfa_method == 'email' %}selected{% endif %}>Email</option>
+                        <option value="authenticator" {% if settings.mfa_method == 'authenticator' %}selected{% endif %}>Application Authenticator</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-section">
+                <h3><i class="fas fa-exclamation-triangle"></i> Verrouillage de Compte</h3>
+                <div class="form-group">
+                    <label for="max_attempts">Nombre maximal de tentatives avant verrouillage</label>
+                    <input type="number" name="max_attempts" id="max_attempts" value="{{ settings.max_attempts }}" class="form-input">
+                </div>
+                
+                <div class="form-group">
+                    <label for="lockout_time">Durée de verrouillage (minutes)</label>
+                    <input type="number" name="lockout_time" id="lockout_time" value="{{ settings.lockout_time }}" class="form-input">
+                </div>
+            </div>
+        </div>
+        
+        <div class="tab-pane" id="password">
+            <div class="form-section">
+                <h3><i class="fas fa-key"></i> Politique des Mots de Passe</h3>
+                <div class="form-group">
+                    <label for="min_length">Longueur minimale</label>
+                    <input type="number" name="min_length" id="min_length" value="{{ settings.min_length }}" class="form-input">
+                </div>
+                
+                <div class="form-group">
+                    <label for="require_complexity">Complexité requise</label>
+                    <select name="require_complexity" id="require_complexity" class="form-select">
+                        <option value="low" {% if settings.require_complexity == 'low' %}selected{% endif %}>Basique (lettres seulement)</option>
+                        <option value="medium" {% if settings.require_complexity == 'medium' %}selected{% endif %}>Moyenne (lettres + chiffres)</option>
+                        <option value="high" {% if settings.require_complexity == 'high' %}selected{% endif %}>Élevée (lettres + chiffres + caractères spéciaux)</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="expiry_days">Expiration après (jours)</label>
+                    <input type="number" name="expiry_days" id="expiry_days" value="{{ settings.expiry_days }}" class="form-input">
+                </div>
+            </div>
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="btn btn-save">
+                <i class="fas fa-save"></i> Enregistrer les Paramètres
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        
+        const tab = this.dataset.tab;
+        document.querySelectorAll('.tab-pane').forEach(pane => {
+            pane.classList.remove('active');
+            if (pane.id === tab) {
+                pane.classList.add('active');
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

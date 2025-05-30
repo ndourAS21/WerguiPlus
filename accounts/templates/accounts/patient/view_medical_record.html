@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="patient-container">
+    <div class="patient-header">
+        <div class="patient-profile">
+            <div class="avatar">
+                <i class="fas fa-user-circle"></i>
+            </div>
+            <div class="profile-info">
+                <h2>Mon Dossier Médical</h2>
+                <p><i class="fas fa-id-card"></i> {{ request.user.id_number }}</p>
+            </div>
+        </div>
+        <div class="patient-actions">
+            <a href="{% url 'download_medical_record' %}" class="btn btn-primary">
+                <i class="fas fa-download"></i> Télécharger
+            </a>
+        </div>
+    </div>
+
+    <div class="medical-record-tabs">
+        <button class="tab-btn active" data-tab="general">Informations Générales</button>
+        <button class="tab-btn" data-tab="history">Historique Médical</button>
+        <button class="tab-btn" data-tab="prescriptions">Prescriptions</button>
+        <button class="tab-btn" data-tab="exams">Examens</button>
+    </div>
+
+    <div class="medical-record-content">
+        <div class="tab-pane active" id="general">
+            <div class="info-card">
+                <h3><i class="fas fa-info-circle"></i> Informations Personnelles</h3>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="info-label">Nom complet :</span>
+                        <span class="info-value">{{ request.user.get_full_name }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Date de naissance :</span>
+                        <span class="info-value">{{ request.user.birth_date|date:"d/m/Y" }} ({{ age }} ans)</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Groupe sanguin :</span>
+                        <span class="info-value">{{ medical_info.blood_type|default:"Non spécifié" }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Allergies :</span>
+                        <span class="info-value">{{ medical_info.allergies|default:"Aucune connue" }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-card">
+                <h3><i class="fas fa-heartbeat"></i> Informations Médicales</h3>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="info-label">Médecin traitant :</span>
+                        <span class="info-value">{{ medical_info.primary_doctor|default:"Non spécifié" }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Dernière consultation :</span>
+                        <span class="info-value">{{ medical_info.last_consultation|date:"d/m/Y"|default:"Jamais" }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Prochain rendez-vous :</span>
+                        <span class="info-value">{{ medical_info.next_appointment|date:"d/m/Y"|default:"Aucun" }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-pane" id="history">
+            <div class="timeline">
+                {% for event in medical_history %}
+                <div class="timeline-event">
+                    <div class="event-date">
+                        {{ event.date|date:"d/m/Y" }}
+                    </div>
+                    <div class="event-content">
+                        <h4>{{ event.title }}</h4>
+                        <p>{{ event.description }}</p>
+                        {% if event.doctor %}
+                        <div class="event-doctor">
+                            <i class="fas fa-user-md"></i> {{ event.doctor }}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% empty %}
+                <div class="empty-state">
+                    <i class="fas fa-history"></i>
+                    <p>Aucun historique médical enregistré</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="tab-pane" id="prescriptions">
+            {% for prescription in prescriptions %}
+            <div class="prescription-card">
+                <div class="prescription-header">
+                    <h4>Ordonnance du {{ prescription.date|date:"d/m/Y" }}</h4>
+                    <span class="prescription-status {% if prescription.is_active %}active{% else %}expired{% endif %}">
+                        {% if prescription.is_active %}
+                        <i class="fas fa-check-circle"></i> Active
+                        {% else %}
+                        <i class="fas fa-exclamation-triangle"></i> Expirée
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="prescription-doctor">
+                    <i class="fas fa-user-md"></i> {{ prescription.doctor }}
+                </div>
+                <div class="prescription-medications">
+                    <h5><i class="fas fa-pills"></i> Médicaments prescrits :</h5>
+                    <ul>
+                        {% for med in prescription.medications %}
+                        <li>
+                            <strong>{{ med.name }}</strong> - {{ med.dosage }}
+                            <p>{{ med.instructions }}</p>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <div class="prescription-notes">
+                    <h5><i class="fas fa-comment-medical"></i> Notes du médecin :</h5>
+                    <p>{{ prescription.notes|default:"Aucune note" }}</p>
+                </div>
+            </div>
+            {% empty %}
+            <div class="empty-state">
+                <i class="fas fa-prescription-bottle-alt"></i>
+                <p>Aucune prescription enregistrée</p>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="tab-pane" id="exams">
+            {% for exam in exams %}
+            <div class="exam-card">
+                <div class="exam-header">
+                    <h4>{{ exam.type }} - {{ exam.date|date:"d/m/Y" }}</h4>
+                    <span class="exam-status">
+                        {% if exam.results_available %}
+                        <i class="fas fa-check-circle"></i> Résultats disponibles
+                        {% else %}
+                        <i class="fas fa-hourglass-half"></i> En attente
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="exam-details">
+                    <p><strong>Demandé par :</strong> {{ exam.requested_by }}</p>
+                    <p><strong>Lieu :</strong> {{ exam.location }}</p>
+                    {% if exam.notes %}
+                    <p><strong>Notes :</strong> {{ exam.notes }}</p>
+                    {% endif %}
+                </div>
+                {% if exam.results_available %}
+                <div class="exam-results">
+                    <h5><i class="fas fa-file-medical"></i> Résultats :</h5>
+                    <p>{{ exam.results_summary }}</p>
+                    <a href="{% url 'view_exam_results' exam.id %}" class="btn btn-view-results">
+                        <i class="fas fa-eye"></i> Voir les résultats complets
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+            {% empty %}
+            <div class="empty-state">
+                <i class="fas fa-microscope"></i>
+                <p>Aucun examen médical enregistré</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<script>
+document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        // Gestion des onglets
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        
+        // Affichage du contenu correspondant
+        const tab = this.dataset.tab;
+        document.querySelectorAll('.tab-pane').forEach(pane => {
+            pane.classList.remove('active');
+            if (pane.id === tab) {
+                pane.classList.add('active');
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

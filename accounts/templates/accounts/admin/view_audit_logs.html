@@ -1,0 +1,47 @@
+{% extends "accounts/base.html" %}
+
+{% block content %}
+<div class="container">
+    <h2>Journal d'activité</h2>
+    
+    <form method="get" class="mb-4">
+        <div class="form-group">
+            <label for="action">Filtrer par action :</label>
+            <select name="action" id="action" class="form-control">
+                <option value="">Toutes les actions</option>
+                {% for action in actions %}
+                <option value="{{ action.0 }}" {% if action.0 == selected_action %}selected{% endif %}>
+                    {{ action.1 }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary">Filtrer</button>
+    </form>
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Utilisateur</th>
+                <th>Action</th>
+                <th>Modèle</th>
+                <th>Détails</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for log in logs %}
+            <tr>
+                <td>{{ log.timestamp|date:"d/m/Y H:i" }}</td>
+                <td>{{ log.user.get_full_name|default:log.user.username }}</td>
+                <td>{{ log.get_action_display }}</td>
+                <td>{{ log.model }}</td>
+                <td>{{ log.details|truncatechars:50 }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% include 'accounts/includes/pagination.html' with page=logs %}
+</div>
+{% endblock %}

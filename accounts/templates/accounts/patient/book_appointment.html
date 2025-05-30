@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="patient-container">
+    <div class="patient-header">
+        <h2><i class="fas fa-calendar-plus"></i> Prendre un Rendez-vous</h2>
+        <p class="subtitle">Sélectionnez un médecin et une disponibilité</p>
+    </div>
+
+    <form method="post" class="appointment-form">
+        {% csrf_token %}
+        
+        <div class="form-section">
+            <h3><i class="fas fa-user-md"></i> Choix du Médecin</h3>
+            <div class="form-group">
+                <label for="doctor">Médecin</label>
+                <select name="doctor" id="doctor" required class="form-select">
+                    <option value="">Sélectionnez un médecin...</option>
+                    {% for doctor in doctors %}
+                    <option value="{{ doctor.id }}">Dr. {{ doctor.get_full_name }} - {{ doctor.specialty }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="reason">Motif de consultation</label>
+                <select name="reason" id="reason" required class="form-select">
+                    <option value="">Sélectionnez un motif...</option>
+                    <option value="consultation">Consultation générale</option>
+                    <option value="followup">Suivi de traitement</option>
+                    <option value="emergency">Urgence</option>
+                    <option value="other">Autre</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="form-section">
+            <h3><i class="fas fa-clock"></i> Date et Heure</h3>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="date">Date</label>
+                    <input type="date" name="date" id="date" required class="form-input" min="{% now 'Y-m-d' %}">
+                </div>
+                <div class="form-group">
+                    <label for="time">Heure</label>
+                    <input type="time" name="time" id="time" required class="form-input">
+                </div>
+            </div>
+            
+            <div id="availability-calendar">
+                <!-- Calendrier des disponibilités serait chargé ici via JS -->
+                <div class="calendar-placeholder">
+                    <p>Sélectionnez un médecin pour voir ses disponibilités</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="form-section">
+            <h3><i class="fas fa-notes-medical"></i> Informations Complémentaires</h3>
+            <div class="form-group">
+                <label for="notes">Notes (optionnel)</label>
+                <textarea name="notes" id="notes" class="form-textarea" placeholder="Décrivez brièvement votre problème..."></textarea>
+            </div>
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="btn btn-confirm">
+                <i class="fas fa-check"></i> Confirmer le Rendez-vous
+            </button>
+            <a href="{% url 'view_appointments' %}" class="btn btn-cancel">
+                <i class="fas fa-times"></i> Annuler
+            </a>
+        </div>
+    </form>
+</div>
+
+<script>
+document.getElementById('doctor').addEventListener('change', function() {
+    const doctorId = this.value;
+    if (doctorId) {
+        // Ici, vous chargeriez les disponibilités du médecin via AJAX
+        document.getElementById('availability-calendar').innerHTML = `
+            <div class="loading-spinner">
+                <i class="fas fa-spinner fa-spin"></i> Chargement des disponibilités...
+            </div>
+        `;
+        
+        // Simuler un chargement
+        setTimeout(() => {
+            document.getElementById('availability-calendar').innerHTML = `
+                <div class="availability-slots">
+                    <h4>Disponibilités du Dr. Médecin</h4>
+                    <div class="slots-grid">
+                        <button type="button" class="slot-btn">09:00</button>
+                        <button type="button" class="slot-btn">10:30</button>
+                        <button type="button" class="slot-btn">14:00</button>
+                        <button type="button" class="slot-btn">15:15</button>
+                    </div>
+                </div>
+            `;
+            
+            document.querySelectorAll('.slot-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const time = this.textContent;
+                    document.getElementById('time').value = time;
+                    document.querySelectorAll('.slot-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+        }, 1000);
+    }
+});
+</script>
+{% endblock %}
