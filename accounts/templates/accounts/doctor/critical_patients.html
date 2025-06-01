@@ -3,44 +3,42 @@
 {% block content %}
 <div class="emergency-container">
     <div class="emergency-header">
-        <h2><i class="fas fa-heartbeat"></i> Patients en État Critique</h2>
-        <div class="emergency-alert">
-            <i class="fas fa-bell"></i> {{ critical_count }} patient(s) nécessitant une attention immédiate
+        <h2 class="emergency-title">
+            <i class="fas fa-heartbeat emergency-icon"></i> Patients en État Critique
+        </h2>
+        <div class="emergency-alert alert-critical">
+            <i class="fas fa-exclamation-triangle"></i> 
+            {{ critical_count }} patient(s) nécessitant une attention immédiate
         </div>
     </div>
 
-    <div class="critical-patients-grid">
+    <div class="critical-grid">
         {% for patient in critical_patients %}
-        <div class="critical-patient-card" data-priority="{{ patient.priority }}">
-            <div class="patient-status">
-                <div class="status-indicator {{ patient.priority }}"></div>
-                <span class="priority">Priorité {{ patient.priority }}</span>
-            </div>
-            
-            <div class="patient-info">
-                <h3>{{ patient.get_full_name }}</h3>
-                <p><i class="fas fa-bed"></i> {{ patient.location }}</p>
-                <p><i class="fas fa-clock"></i> Dernière mise à jour: {{ patient.last_update|timesince }}</p>
+        <div class="patient-card priority-{{ patient.priority }}">
+            <div class="patient-header">
+                <div class="priority-badge priority-{{ patient.priority }}">
+                    <i class="fas fa-{% if patient.priority == '1' %}heartbeat{% else %}exclamation{% endif %}"></i>
+                    Priorité {{ patient.priority }}
+                </div>
+                <h3 class="patient-name">{{ patient.get_full_name }}</h3>
+                <div class="patient-meta">
+                    <span><i class="fas fa-bed"></i> {{ patient.location }}</span>
+                    <span><i class="fas fa-clock"></i> {{ patient.last_update|timesince }}</span>
+                </div>
             </div>
             
             <div class="patient-vitals">
-                <div class="vital-item">
-                    <span class="vital-label">FC</span>
-                    <span class="vital-value {% if patient.heart_rate > 100 or patient.heart_rate < 60 %}critical{% endif %}">
-                        {{ patient.heart_rate }} <small>bpm</small>
-                    </span>
+                <div class="vital-item {% if patient.heart_rate > 100 or patient.heart_rate < 60 %}abnormal{% endif %}">
+                    <div class="vital-label">Fréquence Cardiaque</div>
+                    <div class="vital-value">{{ patient.heart_rate }} bpm</div>
                 </div>
-                <div class="vital-item">
-                    <span class="vital-label">TA</span>
-                    <span class="vital-value {% if patient.blood_pressure_systolic > 140 or patient.blood_pressure_diastolic > 90 %}critical{% endif %}">
-                        {{ patient.blood_pressure_systolic }}/{{ patient.blood_pressure_diastolic }}
-                    </span>
+                <div class="vital-item {% if patient.blood_pressure_systolic > 140 or patient.blood_pressure_diastolic > 90 %}abnormal{% endif %}">
+                    <div class="vital-label">Tension Artérielle</div>
+                    <div class="vital-value">{{ patient.blood_pressure_systolic }}/{{ patient.blood_pressure_diastolic }}</div>
                 </div>
-                <div class="vital-item">
-                    <span class="vital-label">SpO2</span>
-                    <span class="vital-value {% if patient.oxygen_saturation < 92 %}critical{% endif %}">
-                        {{ patient.oxygen_saturation }}%
-                    </span>
+                <div class="vital-item {% if patient.oxygen_saturation < 92 %}abnormal{% endif %}">
+                    <div class="vital-label">Saturation O2</div>
+                    <div class="vital-value">{{ patient.oxygen_saturation }}%</div>
                 </div>
             </div>
             
@@ -56,12 +54,235 @@
         {% endfor %}
     </div>
 
-    <div class="emergency-notes">
-        <h3><i class="fas fa-clipboard-list"></i> Notes pour l'Équipe Médicale</h3>
-        <textarea class="team-notes" placeholder="Ajoutez des notes pour l'équipe soignante..."></textarea>
-        <button class="btn btn-save-notes">
+    <div class="team-notes-section">
+        <h3 class="notes-title">
+            <i class="fas fa-clipboard-list"></i> Notes pour l'Équipe Médicale
+        </h3>
+        <textarea class="notes-input" placeholder="Ajoutez des notes pour l'équipe soignante..."></textarea>
+        <button class="btn btn-save">
             <i class="fas fa-save"></i> Enregistrer les Notes
         </button>
     </div>
 </div>
+
+<style>
+    .emergency-container {
+        max-width: 1200px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+    
+    .emergency-header {
+        margin-bottom: 2rem;
+    }
+    
+    .emergency-title {
+        color: #C62828;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    .emergency-icon {
+        font-size: 1.5em;
+    }
+    
+    .emergency-alert {
+        padding: 1rem;
+        border-radius: 8px;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .alert-critical {
+        background-color: #FFEBEE;
+        border-left: 4px solid #C62828;
+        color: #C62828;
+    }
+    
+    .critical-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 3rem;
+    }
+    
+    .patient-card {
+        background: white;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        transition: transform 0.3s;
+    }
+    
+    .patient-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .priority-1 {
+        border-top: 4px solid #C62828;
+    }
+    
+    .priority-2 {
+        border-top: 4px solid #EF6C00;
+    }
+    
+    .priority-3 {
+        border-top: 4px solid #FBC02D;
+    }
+    
+    .patient-header {
+        padding: 1.5rem;
+    }
+    
+    .priority-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.3rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+    }
+    
+    .priority-1 {
+        background-color: #FFEBEE;
+        color: #C62828;
+    }
+    
+    .priority-2 {
+        background-color: #FFF3E0;
+        color: #EF6C00;
+    }
+    
+    .priority-3 {
+        background-color: #FFF8E1;
+        color: #FBC02D;
+    }
+    
+    .patient-name {
+        margin: 0.5rem 0;
+        color: #333;
+    }
+    
+    .patient-meta {
+        display: flex;
+        gap: 1rem;
+        font-size: 0.9rem;
+        color: #666;
+    }
+    
+    .patient-meta span {
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+    
+    .patient-vitals {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        background: #F5F5F5;
+        padding: 1rem;
+        gap: 1rem;
+    }
+    
+    .vital-item {
+        text-align: center;
+        padding: 0.5rem;
+        border-radius: 6px;
+        background: white;
+    }
+    
+    .vital-item.abnormal {
+        background: #FFEBEE;
+        color: #C62828;
+    }
+    
+    .vital-label {
+        font-size: 0.8rem;
+        font-weight: 500;
+        margin-bottom: 0.3rem;
+    }
+    
+    .vital-value {
+        font-weight: 600;
+        font-size: 1.1rem;
+    }
+    
+    .patient-actions {
+        display: flex;
+        padding: 1rem;
+        gap: 1rem;
+    }
+    
+    .btn {
+        padding: 0.6rem 1rem;
+        border-radius: 6px;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.3s;
+    }
+    
+    .btn-view {
+        background: #E8F5E9;
+        color: #2E7D32;
+        border: 1px solid #C8E6C9;
+    }
+    
+    .btn-view:hover {
+        background: #C8E6C9;
+    }
+    
+    .btn-intervene {
+        background: #FFEBEE;
+        color: #C62828;
+        border: 1px solid #FFCDD2;
+    }
+    
+    .btn-intervene:hover {
+        background: #FFCDD2;
+    }
+    
+    .team-notes-section {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 10px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    
+    .notes-title {
+        color: #2E7D32;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    .notes-input {
+        width: 100%;
+        min-height: 100px;
+        padding: 1rem;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+    }
+    
+    .btn-save {
+        background: #2E7D32;
+        color: white;
+        border: none;
+    }
+    
+    .btn-save:hover {
+        background: #1B5E20;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+</style>
 {% endblock %}

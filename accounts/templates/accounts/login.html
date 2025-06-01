@@ -1,30 +1,147 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="auth-container">
-    <h2>Connexion à Wergui+</h2>
-    <form method="post" class="auth-form">
+<div class="auth-container" style="max-width: 500px; margin: 5rem auto; background: var(--white); border-radius: 20px; overflow: hidden; box-shadow: 0 30px 60px rgba(46, 125, 50, 0.15); position: relative; z-index: 10;">
+    <div class="auth-header" style="background: linear-gradient(135deg, var(--medical-green) 0%, var(--green-dark) 100%); padding: 3rem 2rem; text-align: center; color: var(--white); position: relative;">
+        <div class="auth-pattern" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: url('/static/images/medical-pattern-light.png'); opacity: 0.1;"></div>
+        <div style="position: relative; z-index: 2;">
+            <i class="fas fa-hospital" style="font-size: 3rem; margin-bottom: 1rem; color: var(--white);"></i>
+            <h2 style="margin: 0; font-size: 2rem; font-weight: 700;">Connexion à Wergui+</h2>
+            <p style="margin: 0.5rem 0 0; opacity: 0.9;">Accédez à votre espace sécurisé</p>
+        </div>
+    </div>
+    
+    <form method="post" class="auth-form" style="padding: 3rem 2rem; position: relative;">
+        <div class="form-decoration" style="position: absolute; top: -50px; right: -50px; width: 200px; height: 200px; background: radial-gradient(circle, rgba(129, 199, 132, 0.1) 0%, transparent 70%); z-index: -1;"></div>
+        
         {% csrf_token %}
-        <div class="form-group">
-            <label for="role">Rôle :</label>
-            <select id="role" name="role" required>
-                <option value="">Sélectionnez votre rôle</option>
-                <option value="DOCTOR">Médecin</option>
-                <option value="NURSE">Infirmier</option>
-                <option value="PHARMACIST">Pharmacien</option>
-                <option value="ADMIN">Administrateur</option>
-                <option value="PATIENT">Patient</option>
-            </select>
+        
+        <!-- Rôle Field -->
+        <div class="form-group" style="margin-bottom: 2rem; position: relative;">
+            <label for="role" style="display: block; margin-bottom: 0.5rem; color: var(--text-dark); font-weight: 500;">
+                <i class="fas fa-user-tag" style="margin-right: 8px; color: var(--medical-green);"></i> Votre rôle
+            </label>
+            <div class="select-wrapper" style="position: relative;">
+                <select id="role" name="role" required style="width: 100%; padding: 1rem; border: 1px solid #e0e0e0; border-radius: 10px; appearance: none; background-color: var(--gray-light); transition: all 0.3s; font-size: 1rem;">
+                    <option value="">Sélectionnez votre rôle</option>
+                    <option value="DOCTOR">Médecin</option>
+                    <option value="NURSE">Infirmier</option>
+                    <option value="PHARMACIST">Pharmacien</option>
+                    <option value="ADMIN">Administrateur</option>
+                    <option value="PATIENT">Patient</option>
+                </select>
+                <i class="fas fa-chevron-down" style="position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); color: var(--medical-green); pointer-events: none;"></i>
+            </div>
         </div>
-        <div class="form-group">
-            <label for="username">Nom d'utilisateur :</label>
-            <input type="text" id="username" name="username" required>
+        
+        <!-- Username Field -->
+        <div class="form-group" style="margin-bottom: 2rem;">
+            <label for="username" style="display: block; margin-bottom: 0.5rem; color: var(--text-dark); font-weight: 500;">
+                <i class="fas fa-user" style="margin-right: 8px; color: var(--medical-green);"></i> Nom d'utilisateur
+            </label>
+            <div class="input-wrapper" style="position: relative;">
+                <input type="text" id="username" name="username" required style="width: 100%; padding: 1rem; border: 1px solid #e0e0e0; border-radius: 10px; background-color: var(--gray-light); transition: all 0.3s; font-size: 1rem;">
+                <div class="focus-border" style="position: absolute; bottom: 0; left: 0; width: 0; height: 2px; background: var(--medical-green); transition: width 0.3s;"></div>
+            </div>
         </div>
-        <div class="form-group">
-            <label for="password">Mot de passe :</label>
-            <input type="password" id="password" name="password" required>
+        
+        <!-- Password Field -->
+        <div class="form-group" style="margin-bottom: 3rem;">
+            <label for="password" style="display: block; margin-bottom: 0.5rem; color: var(--text-dark); font-weight: 500;">
+                <i class="fas fa-lock" style="margin-right: 8px; color: var(--medical-green);"></i> Mot de passe
+            </label>
+            <div class="input-wrapper" style="position: relative;">
+                <input type="password" id="password" name="password" required style="width: 100%; padding: 1rem; border: 1px solid #e0e0e0; border-radius: 10px; background-color: var(--gray-light); transition: all 0.3s; font-size: 1rem;">
+                <div class="focus-border" style="position: absolute; bottom: 0; left: 0; width: 0; height: 2px; background: var(--medical-green); transition: width 0.3s;"></div>
+                <button type="button" class="toggle-password" style="position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--medical-green); cursor: pointer;">
+                    <i class="fas fa-eye"></i>
+                </button>
+            </div>
         </div>
-        <button type="submit" class="btn btn-primary">S'authentifier</button>
+        
+        <button type="submit" class="auth-submit" style="width: 100%; padding: 1rem; background: linear-gradient(135deg, var(--medical-green) 0%, var(--green-dark) 100%); color: var(--white); border: none; border-radius: 10px; font-size: 1.1rem; font-weight: 600; cursor: pointer; transition: all 0.3s; position: relative; overflow: hidden;">
+            <span style="position: relative; z-index: 2;">Se connecter</span>
+            <i class="fas fa-sign-in-alt" style="margin-left: 10px; position: relative; z-index: 2;"></i>
+            <span class="btn-hover" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, var(--green-light), var(--green-neon)); opacity: 0; transition: opacity 0.3s;"></span>
+        </button>
+        
+        <div class="auth-links" style="margin-top: 2rem; text-align: center;">
+            <a href="#" style="color: var(--medical-green); text-decoration: none; font-weight: 500; display: inline-block; margin: 0 0.5rem;">
+                <i class="fas fa-question-circle"></i> Aide
+            </a>
+            <a href="#" style="color: var(--medical-green); text-decoration: none; font-weight: 500; display: inline-block; margin: 0 0.5rem;">
+                <i class="fas fa-key"></i> Mot de passe oublié
+            </a>
+        </div>
     </form>
 </div>
-{% endblock %}
+
+<style>
+    .auth-container {
+        animation: fadeInUp 0.6s ease;
+    }
+    
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(30px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    select:focus, input:focus {
+        outline: none;
+        border-color: var(--medical-green);
+        background-color: var(--white);
+        box-shadow: 0 0 0 3px rgba(129, 199, 132, 0.3);
+    }
+    
+    select:focus + .focus-border, 
+    input:focus + .focus-border {
+        width: 100%;
+    }
+    
+    .auth-submit:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 20px rgba(46, 125, 50, 0.3);
+    }
+    
+    .auth-submit:hover .btn-hover {
+        opacity: 1;
+    }
+    
+    .toggle-password:hover {
+        color: var(--green-dark);
+    }
+    
+    @media (max-width: 576px) {
+        .auth-container {
+            margin: 2rem auto;
+            border-radius: 0;
+        }
+        
+        .auth-header {
+            padding: 2rem 1rem;
+        }
+        
+        .auth-form {
+            padding: 2rem 1rem;
+        }
+    }
+</style>
+
+<script>
+    // Toggle password visibility
+    document.querySelector('.toggle-password').addEventListener('click', function() {
+        const passwordInput = document.getElementById('password');
+        const icon = this.querySelector('i');
+        
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            passwordInput.type = 'password';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+    });
+</script>
+{% endblock content %}

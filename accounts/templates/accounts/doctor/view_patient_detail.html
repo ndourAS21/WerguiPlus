@@ -2,128 +2,433 @@
 
 {% block content %}
 <div class="patient-detail-container">
-    <h2>Dossier médical de {{ patient.get_full_name }}</h2>
-    
-    <div class="patient-info">
-        <h3>Informations patient</h3>
-        <p><strong>Nom complet:</strong> {{ patient.get_full_name }}</p>
-        <p><strong>Téléphone:</strong> {{ patient.phone_number }}</p>
+    <div class="patient-header">
+        <h2 class="patient-title">
+            <i class="fas fa-user-injured"></i> Dossier médical de {{ patient.get_full_name }}
+        </h2>
+        <a href="{% url 'view_patient_records' %}" class="btn btn-back">
+            <i class="fas fa-arrow-left"></i> Retour à la liste
+        </a>
     </div>
-    
-    <div class="medical-record">
-        <h3>Dossier médical</h3>
-        <div class="record-section">
-            <h4>Antécédents médicaux</h4>
-            <p>{{ record.medical_history|linebreaks }}</p>
+
+    <div class="patient-sections">
+        <div class="patient-section">
+            <h3 class="section-title">
+                <i class="fas fa-id-card"></i> Informations patient
+            </h3>
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="info-label">Nom complet :</span>
+                    <span class="info-value">{{ patient.get_full_name }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Téléphone :</span>
+                    <span class="info-value">{{ patient.phone_number }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Date d'enregistrement :</span>
+                    <span class="info-value">{{ patient.date_joined|date:"d/m/Y" }}</span>
+                </div>
+            </div>
         </div>
-        
-        <div class="record-section">
-            <h4>Allergies</h4>
-            <p>{{ record.allergies|default:"Aucune allergie connue"|linebreaks }}</p>
+
+        <div class="patient-section">
+            <h3 class="section-title">
+                <i class="fas fa-file-medical"></i> Dossier médical
+            </h3>
+            <div class="medical-grid">
+                <div class="medical-card">
+                    <h4 class="card-title">
+                        <i class="fas fa-history"></i> Antécédents médicaux
+                    </h4>
+                    <div class="card-content">
+                        {{ record.medical_history|linebreaks|default:"Aucun antécédent enregistré" }}
+                    </div>
+                </div>
+                
+                <div class="medical-card">
+                    <h4 class="card-title">
+                        <i class="fas fa-allergies"></i> Allergies
+                    </h4>
+                    <div class="card-content">
+                        {{ record.allergies|linebreaks|default:"Aucune allergie connue" }}
+                    </div>
+                </div>
+                
+                <div class="medical-card">
+                    <h4 class="card-title">
+                        <i class="fas fa-pills"></i> Traitements actuels
+                    </h4>
+                    <div class="card-content">
+                        {{ record.current_medications|linebreaks|default:"Aucun traitement en cours" }}
+                    </div>
+                </div>
+            </div>
         </div>
-        
-        <div class="record-section">
-            <h4>Traitements actuels</h4>
-            <p>{{ record.current_medications|default:"Aucun traitement en cours"|linebreaks }}</p>
-        </div>
-    </div>
-    
-    <div class="prescriptions">
-        <h3>Prescriptions</h3>
-        {% if prescriptions %}
-            <table class="prescription-table">
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Médicament</th>
-                        <th>Posologie</th>
-                        <th>Instructions</th>
-                    </tr>
-                </thead>
-                <tbody>
+
+        <div class="patient-section">
+            <h3 class="section-title">
+                <i class="fas fa-file-prescription"></i> Prescriptions
+            </h3>
+            {% if prescriptions %}
+                <div class="prescriptions-list">
                     {% for prescription in prescriptions %}
-                    <tr>
-                        <td>{{ prescription.created_at|date:"d/m/Y" }}</td>
-                        <td>{{ prescription.medication }}</td>
-                        <td>{{ prescription.dosage }}</td>
-                        <td>{{ prescription.instructions|linebreaks }}</td>
-                    </tr>
+                    <div class="prescription-card">
+                        <div class="prescription-header">
+                            <span class="prescription-date">
+                                <i class="fas fa-calendar-day"></i> {{ prescription.created_at|date:"d/m/Y" }}
+                            </span>
+                            <span class="prescription-status {% if prescription.is_expired %}expired{% else %}active{% endif %}">
+                                {% if prescription.is_expired %}
+                                <i class="fas fa-exclamation-triangle"></i> Expirée
+                                {% else %}
+                                <i class="fas fa-check-circle"></i> Active
+                                {% endif %}
+                            </span>
+                        </div>
+                        
+                        <div class="prescription-content">
+                            <div class="medication-item">
+                                <span class="medication-name">{{ prescription.medication }}</span>
+                                <span class="medication-dosage">{{ prescription.dosage }}</span>
+                            </div>
+                            <div class="medication-instructions">
+                                {{ prescription.instructions|linebreaks }}
+                            </div>
+                        </div>
+                        
+                        <div class="prescription-actions">
+                            <a href="{% url 'print_prescription' prescription.id %}" class="btn btn-print">
+                                <i class="fas fa-print"></i> Imprimer
+                            </a>
+                        </div>
+                    </div>
                     {% endfor %}
-                </tbody>
-            </table>
-        {% else %}
-            <p>Aucune prescription disponible</p>
-        {% endif %}
+                </div>
+            {% else %}
+                <div class="no-data">
+                    <i class="fas fa-info-circle"></i> Aucune prescription disponible
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="patient-section">
+            <h3 class="section-title">
+                <i class="fas fa-vial"></i> Examens médicaux
+            </h3>
+            {% if exams %}
+                <div class="exams-table-container">
+                    <table class="exams-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Statut</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for exam in exams %}
+                            <tr>
+                                <td>{{ exam.requested_at|date:"d/m/Y" }}</td>
+                                <td>{{ exam.get_exam_type_display }}</td>
+                                <td>
+                                    <span class="exam-status {% if exam.completed_at %}completed{% else %}pending{% endif %}">
+                                        {% if exam.completed_at %}
+                                        <i class="fas fa-check-circle"></i> Complété
+                                        {% else %}
+                                        <i class="fas fa-hourglass-half"></i> En attente
+                                        {% endif %}
+                                    </span>
+                                </td>
+                                <td class="actions-cell">
+                                    <a href="{% url 'view_exam_detail' exam.id %}" class="btn btn-view">
+                                        <i class="fas fa-eye"></i> Voir
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="no-data">
+                    <i class="fas fa-info-circle"></i> Aucun examen médical
+                </div>
+            {% endif %}
+        </div>
     </div>
-    
-    <div class="exams">
-        <h3>Examens médicaux</h3>
-        {% if exams %}
-            <table class="exam-table">
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Type</th>
-                        <th>Statut</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for exam in exams %}
-                    <tr>
-                        <td>{{ exam.requested_at|date:"d/m/Y" }}</td>
-                        <td>{{ exam.get_exam_type_display }}</td>
-                        <td>
-                            {% if exam.completed_at %}
-                                Complété le {{ exam.completed_at|date:"d/m/Y" }}
-                            {% else %}
-                                En attente
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        {% else %}
-            <p>Aucun examen médical</p>
-        {% endif %}
-    </div>
-    
-    <a href="{% url 'view_patient_records' %}" class="btn btn-secondary">Retour à la liste</a>
 </div>
 
 <style>
     .patient-detail-container {
-        padding: 20px;
         max-width: 1200px;
-        margin: 0 auto;
+        margin: 2rem auto;
+        padding: 0 1rem;
     }
     
-    .patient-info, .medical-record, .prescriptions, .exams {
-        margin-bottom: 30px;
-        padding: 15px;
+    .patient-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+    
+    .patient-title {
+        color: #2E7D32;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .btn-back {
+        background: #f5f5f5;
+        color: #333;
+        border: 1px solid #ddd;
+        padding: 0.7rem 1.2rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        text-decoration: none;
+        border-radius: 6px;
+        transition: all 0.3s;
+    }
+    
+    .btn-back:hover {
+        background: #e0e0e0;
+    }
+    
+    .patient-sections {
+        display: grid;
+        gap: 2rem;
+    }
+    
+    .patient-section {
         background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    
+    .section-title {
+        color: #1B5E20;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 1rem;
+    }
+    
+    .info-item {
+        margin-bottom: 0.5rem;
+    }
+    
+    .info-label {
+        font-weight: 500;
+        color: #666;
+    }
+    
+    .info-value {
+        color: #333;
+    }
+    
+    .medical-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1.5rem;
+    }
+    
+    .medical-card {
+        border: 1px solid #f0f0f0;
         border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        padding: 1rem;
     }
     
-    .record-section {
-        margin-bottom: 15px;
+    .card-title {
+        color: #2E7D32;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 1rem;
+        margin-top: 0;
+        margin-bottom: 1rem;
     }
     
-    table {
+    .card-content {
+        color: #666;
+        font-size: 0.9rem;
+    }
+    
+    .prescriptions-list {
+        display: grid;
+        gap: 1.5rem;
+    }
+    
+    .prescription-card {
+        border: 1px solid #f0f0f0;
+        border-radius: 8px;
+        padding: 1rem;
+    }
+    
+    .prescription-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+    
+    .prescription-date {
+        color: #666;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+    
+    .prescription-status {
+        font-size: 0.8rem;
+        font-weight: 500;
+        padding: 0.2rem 0.5rem;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+    
+    .active {
+        background: #E8F5E9;
+        color: #2E7D32;
+    }
+    
+    .expired {
+        background: #FFF3E0;
+        color: #EF6C00;
+    }
+    
+    .medication-item {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.5rem;
+    }
+    
+    .medication-name {
+        font-weight: 500;
+        color: #333;
+    }
+    
+    .medication-dosage {
+        color: #666;
+        font-size: 0.9rem;
+    }
+    
+    .medication-instructions {
+        color: #666;
+        font-size: 0.9rem;
+    }
+    
+    .prescription-actions {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 1rem;
+    }
+    
+    .btn-print {
+        background: #E3F2FD;
+        color: #1565C0;
+        border: 1px solid #BBDEFB;
+        padding: 0.5rem 1rem;
+        font-size: 0.8rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        text-decoration: none;
+        border-radius: 6px;
+        transition: all 0.3s;
+    }
+    
+    .btn-print:hover {
+        background: #BBDEFB;
+    }
+    
+    .no-data {
+        color: #666;
+        padding: 1rem;
+        text-align: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+    
+    .exams-table-container {
+        overflow-x: auto;
+    }
+    
+    .exams-table {
         width: 100%;
         border-collapse: collapse;
-        margin-top: 10px;
     }
     
-    th, td {
-        padding: 12px 15px;
-        border: 1px solid #ddd;
+    .exams-table th, .exams-table td {
+        padding: 1rem;
         text-align: left;
+        border-bottom: 1px solid #f0f0f0;
     }
     
-    th {
-        background-color: #f5f5f5;
+    .exams-table th {
+        background-color: #F5F5F5;
+        color: #2E7D32;
+        font-weight: 600;
+    }
+    
+    .exam-status {
+        font-size: 0.8rem;
+        font-weight: 500;
+        padding: 0.2rem 0.5rem;
+        border-radius: 12px;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+    
+    .pending {
+        background: #FFF3E0;
+        color: #EF6C00;
+    }
+    
+    .completed {
+        background: #E8F5E9;
+        color: #2E7D32;
+    }
+    
+    .actions-cell {
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    .btn-view {
+        background: #E3F2FD;
+        color: #1565C0;
+        border: 1px solid #BBDEFB;
+        padding: 0.5rem 0.8rem;
+        font-size: 0.8rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        text-decoration: none;
+        border-radius: 6px;
+        transition: all 0.3s;
+    }
+    
+    .btn-view:hover {
+        background: #BBDEFB;
     }
 </style>
 {% endblock %}

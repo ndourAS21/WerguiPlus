@@ -1,34 +1,49 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="doctor-container">
-    <div class="doctor-header">
-        <h2><i class="fas fa-file-medical-alt"></i> Résultats d'Examens</h2>
-        <div class="search-bar">
+<div class="medical-container">
+    <div class="section-header">
+        <h2 class="section-title">
+            <i class="fas fa-file-medical-alt"></i> Résultats d'Examens
+        </h2>
+        
+        <div class="search-container">
             <input type="text" placeholder="Rechercher un patient ou un examen..." class="search-input">
-            <button class="search-btn"><i class="fas fa-search"></i></button>
+            <button class="search-btn">
+                <i class="fas fa-search"></i>
+            </button>
         </div>
     </div>
 
-    <div class="exam-tabs">
-        <button class="tab-btn active" data-tab="pending">En Attente</button>
-        <button class="tab-btn" data-tab="completed">Complétés</button>
-        <button class="tab-btn" data-tab="all">Tous</button>
+    <div class="filter-tabs">
+        <button class="tab-btn active" data-tab="pending">
+            <i class="fas fa-hourglass-half"></i> En Attente
+        </button>
+        <button class="tab-btn" data-tab="completed">
+            <i class="fas fa-check-circle"></i> Complétés
+        </button>
+        <button class="tab-btn" data-tab="all">
+            <i class="fas fa-list"></i> Tous
+        </button>
     </div>
 
-    <div class="exam-results-container">
+    <div class="exam-results-grid">
         {% for exam in exams %}
-        <div class="exam-result-card" data-status="{{ exam.status }}">
+        <div class="exam-card" data-status="{{ exam.status|lower }}">
             <div class="exam-header">
-                <h3>{{ exam.get_exam_type_display }}</h3>
-                <span class="exam-date">{{ exam.requested_at|date:"d/m/Y" }}</span>
-                <span class="exam-status {{ exam.status }}">
-                    {% if exam.status == 'PENDING' %}
-                    <i class="fas fa-hourglass-half"></i> En attente
-                    {% else %}
-                    <i class="fas fa-check-circle"></i> Complété
-                    {% endif %}
-                </span>
+                <h3 class="exam-type">{{ exam.get_exam_type_display }}</h3>
+                <div class="exam-meta">
+                    <span class="exam-date">
+                        <i class="fas fa-calendar-day"></i> {{ exam.requested_at|date:"d/m/Y" }}
+                    </span>
+                    <span class="exam-status {{ exam.status|lower }}">
+                        {% if exam.status == 'PENDING' %}
+                        <i class="fas fa-hourglass-half"></i> En attente
+                        {% else %}
+                        <i class="fas fa-check-circle"></i> Complété
+                        {% endif %}
+                    </span>
+                </div>
             </div>
             
             <div class="exam-patient">
@@ -36,13 +51,21 @@
             </div>
             
             <div class="exam-details">
-                <p><strong>Demandé par :</strong> Dr. {{ exam.requested_by.last_name }}</p>
-                <p><strong>Urgence :</strong> {{ exam.get_urgency_display }}</p>
+                <div class="detail-item">
+                    <span class="detail-label">Demandé par :</span>
+                    <span class="detail-value">Dr. {{ exam.requested_by.last_name }}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">Urgence :</span>
+                    <span class="detail-value">{{ exam.get_urgency_display }}</span>
+                </div>
                 
                 {% if exam.status == 'COMPLETED' %}
                 <div class="exam-results">
-                    <h4><i class="fas fa-clipboard-check"></i> Résultats :</h4>
-                    <p>{{ exam.results|truncatechars:150 }}</p>
+                    <h4 class="results-title">
+                        <i class="fas fa-clipboard-check"></i> Résultats :
+                    </h4>
+                    <p class="results-text">{{ exam.results|truncatechars:150 }}</p>
                 </div>
                 {% endif %}
             </div>
@@ -62,23 +85,261 @@
     </div>
 </div>
 
+<style>
+    .medical-container {
+        max-width: 1200px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+    
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .section-title {
+        color: #2E7D32;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .search-container {
+        display: flex;
+    }
+    
+    .search-input {
+        padding: 0.8rem;
+        border: 1px solid #ddd;
+        border-radius: 6px 0 0 6px;
+        min-width: 250px;
+    }
+    
+    .search-btn {
+        background: #2E7D32;
+        color: white;
+        border: none;
+        padding: 0 1.2rem;
+        border-radius: 0 6px 6px 0;
+        cursor: pointer;
+    }
+    
+    .filter-tabs {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .tab-btn {
+        padding: 0.7rem 1.2rem;
+        border: none;
+        border-radius: 6px;
+        background: #f5f5f5;
+        color: #666;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    
+    .tab-btn.active {
+        background: #2E7D32;
+        color: white;
+    }
+    
+    .exam-results-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 1.5rem;
+    }
+    
+    .exam-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        transition: transform 0.3s;
+    }
+    
+    .exam-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .exam-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .exam-type {
+        margin: 0;
+        color: #333;
+    }
+    
+    .exam-meta {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 0.3rem;
+    }
+    
+    .exam-date {
+        font-size: 0.8rem;
+        color: #666;
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+    
+    .exam-status {
+        font-size: 0.8rem;
+        font-weight: 500;
+        padding: 0.2rem 0.5rem;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+    
+    .pending {
+        background: #FFF3E0;
+        color: #EF6C00;
+    }
+    
+    .completed {
+        background: #E8F5E9;
+        color: #2E7D32;
+    }
+    
+    .exam-patient {
+        color: #333;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .exam-details {
+        margin-bottom: 1.5rem;
+    }
+    
+    .detail-item {
+        display: flex;
+        margin-bottom: 0.5rem;
+    }
+    
+    .detail-label {
+        font-weight: 500;
+        min-width: 100px;
+        color: #666;
+    }
+    
+    .detail-value {
+        color: #333;
+    }
+    
+    .exam-results {
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid #f0f0f0;
+    }
+    
+    .results-title {
+        font-size: 1rem;
+        margin: 0 0 0.5rem 0;
+        color: #333;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .results-text {
+        color: #666;
+        font-size: 0.9rem;
+        margin: 0;
+    }
+    
+    .exam-actions {
+        display: flex;
+        gap: 0.8rem;
+    }
+    
+    .btn {
+        padding: 0.6rem 1rem;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.3s;
+        text-decoration: none;
+    }
+    
+    .btn-view {
+        background: #E3F2FD;
+        color: #1565C0;
+        border: 1px solid #BBDEFB;
+    }
+    
+    .btn-view:hover {
+        background: #BBDEFB;
+    }
+    
+    .btn-download {
+        background: #E8F5E9;
+        color: #2E7D32;
+        border: 1px solid #C8E6C9;
+    }
+    
+    .btn-download:hover {
+        background: #C8E6C9;
+    }
+</style>
+
 <script>
-document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', function() {
-        // Gestion des onglets
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        this.classList.add('active');
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            // Gestion des onglets
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Filtrage des résultats
+            const tab = this.dataset.tab;
+            document.querySelectorAll('.exam-card').forEach(card => {
+                if (tab === 'all' || card.dataset.status === tab) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+    });
+
+    // Fonction de recherche
+    document.querySelector('.search-input').addEventListener('keyup', function() {
+        const searchTerm = this.value.toLowerCase();
+        const cards = document.querySelectorAll('.exam-card');
         
-        // Filtrage des résultats
-        const tab = this.dataset.tab;
-        document.querySelectorAll('.exam-result-card').forEach(card => {
-            if (tab === 'all' || card.dataset.status.toLowerCase() === tab) {
+        cards.forEach(card => {
+            const patientName = card.querySelector('.exam-patient').textContent.toLowerCase();
+            const examType = card.querySelector('.exam-type').textContent.toLowerCase();
+            
+            if (patientName.includes(searchTerm) || examType.includes(searchTerm)) {
                 card.style.display = 'block';
             } else {
                 card.style.display = 'none';
             }
         });
     });
-});
 </script>
 {% endblock %}

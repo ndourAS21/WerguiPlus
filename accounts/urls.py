@@ -21,6 +21,7 @@ urlpatterns = [
     path('doctor/view-exam-results/', views.view_exam_results, name='view_exam_results'),
     path('doctor/emergency-access/', views.emergency_access, name='emergency_access'),
     path('doctor/critical-patients/', views.critical_patients, name='critical_patients'),
+    path('doctor/view-patient-detail/<int:patient_id>/', views.view_patient_detail, name='view_patient_detail'),
     
     # Infirmier
     path('nurse/record-care/', views.record_care, name='record_care'),

@@ -1,19 +1,62 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="auth-container">
-    <h2>Vérification en Deux Étapes</h2>
-    <p>Un code de vérification a été envoyé à votre numéro de téléphone associé.</p>
-    
-    <form method="post" class="auth-form">
-        {% csrf_token %}
-        <div class="form-group">
-            <label for="mfa_code">Code de vérification :</label>
-            <input type="text" id="mfa_code" name="mfa_code" required>
+<div class="auth-container" style="max-width: 450px; margin: 5rem auto; background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+    <div class="auth-header" style="background: linear-gradient(135deg, var(--medical-green) 0%, var(--green-dark) 100%); padding: 2rem; text-align: center; color: white;">
+        <div class="auth-logo" style="display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 1rem;">
+            <i class="fas fa-mobile-alt" style="font-size: 2rem;"></i>
+            <h2 style="margin: 0; font-size: 1.8rem;">Vérification en 2 Étapes</h2>
         </div>
-        <button type="submit" class="btn btn-primary">Vérifier</button>
-    </form>
+    </div>
     
-    <p class="mfa-note">Si vous n'avez pas reçu de code, vérifiez votre numéro ou contactez l'administrateur.</p>
+    <div class="auth-body" style="padding: 2rem;">
+        <p style="text-align: center; color: #666; margin-bottom: 2rem;">
+            Un code de vérification a été envoyé à votre numéro de téléphone associé.
+        </p>
+        
+        <form method="post" class="auth-form">
+            {% csrf_token %}
+            <div class="form-group" style="margin-bottom: 2rem;">
+                <label for="mfa_code" style="display: block; margin-bottom: 0.5rem; color: var(--text-dark); font-weight: 500;">Code de vérification</label>
+                <div style="display: flex; gap: 0.5rem;">
+                    <input type="text" id="mfa_code" name="mfa_code" required 
+                           style="flex: 1; padding: 1rem; border: 1px solid #ddd; border-radius: 8px; text-align: center; font-size: 1.2rem; letter-spacing: 2px;"
+                           maxlength="6" pattern="\d{6}" inputmode="numeric">
+                </div>
+            </div>
+            
+            <button type="submit" class="btn btn-block" style="width: 100%; padding: 1rem; background: linear-gradient(135deg, var(--medical-green) 0%, var(--green-dark) 100%); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s;">
+                <i class="fas fa-check-circle" style="margin-right: 10px;"></i> Vérifier
+            </button>
+        </form>
+    </div>
+    
+    <div class="auth-footer" style="padding: 1.5rem 2rem; text-align: center; border-top: 1px solid #eee; background: var(--green-soft);">
+        <p style="margin: 0; color: #666; font-size: 0.9rem;">
+            Si vous n'avez pas reçu de code, vérifiez votre numéro ou contactez l'administrateur.
+        </p>
+    </div>
 </div>
-{% endblock %}
+
+<style>
+    .auth-container {
+        animation: fadeIn 0.5s ease;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(76, 175, 80, 0.4);
+    }
+    
+    input:focus {
+        outline: none;
+        border-color: var(--medical-green);
+        box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+    }
+</style>
+{% endblock content %}

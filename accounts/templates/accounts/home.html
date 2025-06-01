@@ -1,26 +1,103 @@
 {% extends "base.html" %}
 
 {% block content %}
-<section class="hero">
-    <div class="hero-content">
-        <h2>Plateforme Médicale Sécurisée</h2>
-        <p>Gestion des dossiers médicaux adaptée au contexte sénégalais</p>
-        <a href="{% url 'login' %}" class="btn btn-primary">Se Connecter</a>
+<section class="hero-section" style="min-height: 80vh; display: flex; align-items: center; background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(233,245,233,0.9) 100%); position: relative; overflow: hidden;">
+    <div class="container" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;">
+        <div class="hero-content animate__animated animate__fadeInLeft" style="flex: 1; min-width: 500px; padding: 2rem 0; position: relative; z-index: 1;">
+            <h1 class="hero-title" style="font-size: 3rem; font-weight: 700; line-height: 1.2; color: var(--medical-green); margin-bottom: 1.5rem;">
+                Plateforme Médicale <span style="color: var(--green-dark);">Wergui+</span>
+            </h1>
+            <p class="hero-subtitle" style="font-size: 1.25rem; color: var(--text-dark); max-width: 600px; margin-bottom: 3rem; line-height: 1.6;">
+                Solution complète de gestion médicale sécurisée, conçue pour les professionnels de santé exigeants.
+            </p>
+            <div class="hero-buttons" style="display: flex; gap: 1.5rem;">
+                <a href="{% url 'login' %}" class="btn-main animate__animated animate__pulse animate__infinite" style="display: inline-flex; align-items: center; padding: 1rem 2rem; background: var(--medical-green); color: var(--white); border-radius: 8px; font-weight: 600; text-decoration: none; transition: all 0.3s ease; box-shadow: 0 5px 15px rgba(46, 125, 50, 0.3);">
+                    <span>Accéder à la plateforme</span>
+                    <i class="fas fa-arrow-right" style="margin-left: 10px; transition: transform 0.3s;"></i>
+                </a>
+            </div>
+        </div>
+        
+        <div class="hero-image animate__animated animate__fadeIn" style="flex: 1; min-width: 500px; position: relative; z-index: 1;">
+            <img src="/static/images/medical-illustration.png" alt="Plateforme médicale" style="width: 100%; max-width: 600px;">
+        </div>
     </div>
 </section>
 
-<section class="features">
-    <div class="feature-card">
-        <h3>Accès Sécurisé</h3>
-        <p>Authentification multi-facteurs pour protéger les données sensibles</p>
-    </div>
-    <div class="feature-card">
-        <h3>Gestion des Rôles</h3>
-        <p>Contrôle d'accès granulaire basé sur les rôles professionnels</p>
-    </div>
-    <div class="feature-card">
-        <h3>Adapté au Sénégal</h3>
-        <p>Fonctionnement hors-ligne et synchronisation différée</p>
+<section class="features-section" style="padding: 5rem 0; background: var(--white);">
+    <div class="container">
+        <div class="section-header" style="text-align: center; margin-bottom: 4rem;">
+            <h2 style="font-size: 2.2rem; font-weight: 700; color: var(--medical-green); margin-bottom: 1rem;">Fonctionnalités Clés</h2>
+            <p style="font-size: 1.1rem; color: var(--text-dark); max-width: 700px; margin: 0 auto; line-height: 1.6;">
+                Découvrez les atouts de notre plateforme médicale innovante
+            </p>
+        </div>
+        
+        <div class="features-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
+            <!-- Feature 1 -->
+            <div class="feature-card animate__animated animate__fadeInUp" style="background: var(--gray-light); border-radius: 15px; padding: 2rem; transition: all 0.3s ease; border-left: 4px solid var(--medical-green);">
+                <div class="feature-icon" style="width: 60px; height: 60px; background: var(--medical-green); color: var(--white); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin-bottom: 1.5rem;">
+                    <i class="fas fa-lock"></i>
+                </div>
+                <h3 style="font-size: 1.3rem; color: var(--medical-green); margin-bottom: 1rem;">Sécurité Maximale</h3>
+                <p style="color: var(--text-dark); line-height: 1.6;">
+                    Chiffrement de bout en bout et authentification multifacteur pour une protection absolue des données sensibles.
+                </p>
+            </div>
+            
+            <!-- Feature 2 -->
+            <div class="feature-card animate__animated animate__fadeInUp" style="animation-delay: 0.2s; background: var(--gray-light); border-radius: 15px; padding: 2rem; transition: all 0.3s ease; border-left: 4px solid var(--medical-green);">
+                <div class="feature-icon" style="width: 60px; height: 60px; background: var(--medical-green); color: var(--white); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin-bottom: 1.5rem;">
+                    <i class="fas fa-user-md"></i>
+                </div>
+                <h3 style="font-size: 1.3rem; color: var(--medical-green); margin-bottom: 1rem;">Gestion des Rôles</h3>
+                <p style="color: var(--text-dark); line-height: 1.6;">
+                    Contrôle d'accès granulaire avec différents niveaux d'autorisation pour chaque professionnel.
+                </p>
+            </div>
+            
+            <!-- Feature 3 -->
+            <div class="feature-card animate__animated animate__fadeInUp" style="animation-delay: 0.4s; background: var(--gray-light); border-radius: 15px; padding: 2rem; transition: all 0.3s ease; border-left: 4px solid var(--medical-green);">
+                <div class="feature-icon" style="width: 60px; height: 60px; background: var(--medical-green); color: var(--white); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin-bottom: 1.5rem;">
+                    <i class="fas fa-mobile-alt"></i>
+                </div>
+                <h3 style="font-size: 1.3rem; color: var(--medical-green); margin-bottom: 1rem;">Accessibilité</h3>
+                <p style="color: var(--text-dark); line-height: 1.6;">
+                    Interface optimisée pour tous les appareils, disponible même en mode hors-ligne.
+                </p>
+            </div>
+        </div>
     </div>
 </section>
-{% endblock %}
+
+<style>
+    .btn-main:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(46, 125, 50, 0.4);
+    }
+    
+    .btn-main:hover i {
+        transform: translateX(5px);
+    }
+    
+    .feature-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+    
+    @media (max-width: 768px) {
+        .hero-content, .hero-image {
+            min-width: 100%;
+            text-align: center;
+        }
+        
+        .hero-buttons {
+            justify-content: center;
+        }
+        
+        .hero-title {
+            font-size: 2.2rem;
+        }
+    }
+</style>
+{% endblock content %}

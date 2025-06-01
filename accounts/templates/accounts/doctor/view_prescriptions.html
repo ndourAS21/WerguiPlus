@@ -1,9 +1,12 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="doctor-container">
-    <div class="doctor-header">
-        <h2><i class="fas fa-file-prescription"></i> Ordonnances</h2>
+<div class="medical-container">
+    <div class="section-header">
+        <h2 class="section-title">
+            <i class="fas fa-file-prescription"></i> Ordonnances
+        </h2>
+        
         <div class="header-actions">
             <a href="{% url 'create_prescription' %}" class="btn btn-primary">
                 <i class="fas fa-plus"></i> Nouvelle Ordonnance
@@ -13,7 +16,9 @@
 
     <div class="filter-bar">
         <div class="filter-group">
-            <label for="status-filter">Statut :</label>
+            <label for="status-filter" class="filter-label">
+                <i class="fas fa-filter"></i> Statut :
+            </label>
             <select id="status-filter" class="filter-select">
                 <option value="all">Toutes</option>
                 <option value="active">Actives</option>
@@ -21,7 +26,9 @@
             </select>
         </div>
         <div class="filter-group">
-            <label for="patient-filter">Patient :</label>
+            <label for="patient-filter" class="filter-label">
+                <i class="fas fa-user-injured"></i> Patient :
+            </label>
             <select id="patient-filter" class="filter-select">
                 <option value="all">Tous les patients</option>
                 {% for patient in patients %}
@@ -31,19 +38,25 @@
         </div>
     </div>
 
-    <div class="prescription-list">
+    <div class="prescriptions-grid">
         {% for prescription in prescriptions %}
-        <div class="prescription-card {% if prescription.is_expired %}expired{% endif %}">
+        <div class="prescription-card {% if prescription.is_expired %}expired{% else %}active{% endif %}" 
+             data-status="{% if prescription.is_expired %}expired{% else %}active{% endif %}"
+             data-patient="{{ prescription.patient.id }}">
             <div class="prescription-header">
-                <h3>Ordonnance #{{ prescription.id }}</h3>
-                <span class="prescription-date">{{ prescription.created_at|date:"d/m/Y" }}</span>
-                <span class="prescription-status">
-                    {% if prescription.is_expired %}
-                    <i class="fas fa-exclamation-triangle"></i> Expirée
-                    {% else %}
-                    <i class="fas fa-check-circle"></i> Active
-                    {% endif %}
-                </span>
+                <h3 class="prescription-title">Ordonnance #{{ prescription.id }}</h3>
+                <div class="prescription-meta">
+                    <span class="prescription-date">
+                        <i class="fas fa-calendar-day"></i> {{ prescription.created_at|date:"d/m/Y" }}
+                    </span>
+                    <span class="prescription-status">
+                        {% if prescription.is_expired %}
+                        <i class="fas fa-exclamation-triangle"></i> Expirée
+                        {% else %}
+                        <i class="fas fa-check-circle"></i> Active
+                        {% endif %}
+                    </span>
+                </div>
             </div>
             
             <div class="prescription-patient">
@@ -51,12 +64,15 @@
             </div>
             
             <div class="prescription-medications">
-                <h4><i class="fas fa-pills"></i> Médicaments :</h4>
-                <ul>
+                <h4 class="medications-title">
+                    <i class="fas fa-pills"></i> Médicaments
+                </h4>
+                <ul class="medications-list">
                     {% for med in prescription.medications.all %}
-                    <li>
-                        <strong>{{ med.name }}</strong> - {{ med.dosage }}
-                        <p>{{ med.instructions }}</p>
+                    <li class="medication-item">
+                        <div class="medication-name">{{ med.name }}</div>
+                        <div class="medication-dosage">{{ med.dosage }}</div>
+                        <div class="medication-instructions">{{ med.instructions }}</div>
                     </li>
                     {% endfor %}
                 </ul>
@@ -71,7 +87,285 @@
                 </a>
             </div>
         </div>
+        {% empty %}
+        <div class="no-prescriptions">
+            <i class="fas fa-info-circle"></i> Aucune ordonnance disponible
+        </div>
         {% endfor %}
     </div>
 </div>
+
+<style>
+    .medical-container {
+        max-width: 1200px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+    
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+    
+    .section-title {
+        color: #2E7D32;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .header-actions {
+        display: flex;
+        gap: 1rem;
+    }
+    
+    .btn {
+        padding: 0.7rem 1.2rem;
+        border-radius: 6px;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.3s;
+        text-decoration: none;
+    }
+    
+    .btn-primary {
+        background: #2E7D32;
+        color: white;
+        border: none;
+    }
+    
+    .btn-primary:hover {
+        background: #1B5E20;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(46, 125, 50, 0.3);
+    }
+    
+    .filter-bar {
+        display: flex;
+        gap: 2rem;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+    }
+    
+    .filter-group {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .filter-label {
+        font-weight: 500;
+        color: #666;
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+    
+    .filter-select {
+        padding: 0.5rem;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        min-width: 200px;
+    }
+    
+    .prescriptions-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 1.5rem;
+    }
+    
+    .prescription-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        transition: transform 0.3s;
+    }
+    
+    .prescription-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .active {
+        border-left: 4px solid #2E7D32;
+    }
+    
+    .expired {
+        border-left: 4px solid #EF6C00;
+    }
+    
+    .prescription-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .prescription-title {
+        margin: 0;
+        color: #333;
+        font-size: 1.1rem;
+    }
+    
+    .prescription-meta {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 0.3rem;
+    }
+    
+    .prescription-date {
+        font-size: 0.8rem;
+        color: #666;
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+    
+    .prescription-status {
+        font-size: 0.8rem;
+        font-weight: 500;
+        padding: 0.2rem 0.5rem;
+        border-radius: 12px;
+    }
+    
+    .active .prescription-status {
+        background: #E8F5E9;
+        color: #2E7D32;
+    }
+    
+    .expired .prescription-status {
+        background: #FFF3E0;
+        color: #EF6C00;
+    }
+    
+    .prescription-patient {
+        color: #333;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .prescription-medications {
+        margin-bottom: 1.5rem;
+    }
+    
+    .medications-title {
+        font-size: 1rem;
+        color: #333;
+        margin: 0 0 1rem 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .medications-list {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+    
+    .medication-item {
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px dashed #eee;
+    }
+    
+    .medication-item:last-child {
+        margin-bottom: 0;
+        padding-bottom: 0;
+        border-bottom: none;
+    }
+    
+    .medication-name {
+        font-weight: 500;
+        color: #333;
+    }
+    
+    .medication-dosage {
+        color: #666;
+        font-size: 0.9rem;
+        margin: 0.3rem 0;
+    }
+    
+    .medication-instructions {
+        color: #666;
+        font-size: 0.9rem;
+    }
+    
+    .prescription-actions {
+        display: flex;
+        gap: 0.8rem;
+    }
+    
+    .btn-print {
+        background: #E3F2FD;
+        color: #1565C0;
+        border: 1px solid #BBDEFB;
+        padding: 0.6rem 1rem;
+    }
+    
+    .btn-print:hover {
+        background: #BBDEFB;
+    }
+    
+    .btn-edit {
+        background: #E8F5E9;
+        color: #2E7D32;
+        border: 1px solid #C8E6C9;
+        padding: 0.6rem 1rem;
+    }
+    
+    .btn-edit:hover {
+        background: #C8E6C9;
+    }
+    
+    .no-prescriptions {
+        grid-column: 1 / -1;
+        padding: 2rem;
+        text-align: center;
+        color: #666;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+</style>
+
+<script>
+    // Filtrage par statut
+    document.getElementById('status-filter').addEventListener('change', function() {
+        const status = this.value;
+        const cards = document.querySelectorAll('.prescription-card');
+        
+        cards.forEach(card => {
+            if (status === 'all' || card.dataset.status === status) {
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    });
+    
+    // Filtrage par patient
+    document.getElementById('patient-filter').addEventListener('change', function() {
+        const patientId = this.value;
+        const cards = document.querySelectorAll('.prescription-card');
+        
+        cards.forEach(card => {
+            if (patientId === 'all' || card.dataset.patient === patientId) {
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    });
+</script>
 {% endblock %}

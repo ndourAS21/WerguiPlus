@@ -2,148 +2,269 @@
 
 {% block content %}
 <div class="emergency-container">
-    <h2>🔴 Accès Urgence - Dossiers Protégés</h2>
-    
-    <div class="emergency-alert">
-        <p>Vous accédez à des dossiers médicaux sensibles. Toutes vos actions sont enregistrées.</p>
+    <div class="emergency-header">
+        <h2 class="emergency-title">
+            <i class="fas fa-lock-open emergency-icon"></i> Accès Urgence - Dossiers Protégés
+        </h2>
+        <div class="emergency-alert">
+            <i class="fas fa-shield-alt"></i> 
+            Vous accédez à des dossiers médicaux sensibles. Toutes vos actions sont enregistrées.
+        </div>
     </div>
 
-    <div class="search-bar">
-        <input type="text" id="patientSearch" placeholder="Rechercher un patient...">
+    <div class="search-container">
+        <div class="search-box">
+            <input type="text" id="patientSearch" placeholder="Rechercher un patient..." class="search-input">
+            <button class="search-btn">
+                <i class="fas fa-search"></i>
+            </button>
+        </div>
     </div>
 
-    <table class="emergency-table">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Patient</th>
-                <th>Dernière Mise à Jour</th>
-                <th>État</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for record in critical_patients %}
-            <tr>
-                <td>{{ record.patient.id }}</td>
-                <td>
-                    <strong>{{ record.patient.get_full_name }}</strong><br>
-                    <small>{{ record.patient.phone_number }}</small>
-                </td>
-                <td>{{ record.last_updated|date:"d/m/Y H:i" }}</td>
-                <td>
-                    <span class="status-badge critical">Critique</span>
-                </td>
-                <td>
-                    <a href="{% url 'view_patient_detail' record.patient.id %}" class="btn btn-small">
-                        Voir dossier
-                    </a>
-                    <a href="{% url 'create_prescription' %}?patient_id={{ record.patient.id }}" class="btn btn-small btn-emergency">
-                        Prescrire
-                    </a>
-                </td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="5" class="text-center">Aucun patient en état critique</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div class="medical-records-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Patient</th>
+                    <th>Dernière Mise à Jour</th>
+                    <th>État</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for record in critical_patients %}
+                <tr>
+                    <td>{{ record.patient.id }}</td>
+                    <td>
+                        <strong>{{ record.patient.get_full_name }}</strong><br>
+                        <small>{{ record.patient.phone_number }}</small>
+                    </td>
+                    <td>{{ record.last_updated|date:"d/m/Y H:i" }}</td>
+                    <td>
+                        <span class="status-badge critical">
+                            <i class="fas fa-exclamation-circle"></i> Critique
+                        </span>
+                    </td>
+                    <td class="actions-cell">
+                        <a href="{% url 'view_patient_detail' record.patient.id %}" class="btn btn-view">
+                            <i class="fas fa-file-medical"></i> Dossier
+                        </a>
+                        <a href="{% url 'create_prescription' %}?patient_id={{ record.patient.id }}" class="btn btn-prescribe">
+                            <i class="fas fa-prescription-bottle-alt"></i> Prescrire
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="no-records">
+                        <i class="fas fa-info-circle"></i> Aucun patient en état critique
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 
-    <div class="emergency-footer">
-        <p>Accès autorisé pour: <strong>{{ user.get_full_name }}</strong> ({{ user.get_role_display }})</p>
-        <p>Heure d'accès: {% now "d/m/Y H:i" %}</p>
+    <div class="access-footer">
+        <div class="access-info">
+            <p><strong>Accès autorisé pour :</strong> {{ user.get_full_name }} ({{ user.get_role_display }})</p>
+            <p><strong>Heure d'accès :</strong> {% now "d/m/Y H:i" %}</p>
+        </div>
+        <a href="{% url 'dashboard' %}" class="btn btn-exit">
+            <i class="fas fa-sign-out-alt"></i> Retour au tableau de bord
+        </a>
     </div>
 </div>
 
 <style>
     .emergency-container {
-        padding: 20px;
         max-width: 1200px;
-        margin: 0 auto;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+    
+    .emergency-header {
+        margin-bottom: 2rem;
+    }
+    
+    .emergency-title {
+        color: #C62828;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    .emergency-icon {
+        font-size: 1.2em;
     }
     
     .emergency-alert {
-        background-color: #ffe6e6;
-        border-left: 4px solid #ff3333;
-        padding: 15px;
-        margin-bottom: 20px;
+        background-color: #FFEBEE;
+        border-left: 4px solid #C62828;
+        padding: 1rem;
+        border-radius: 8px;
+        color: #C62828;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
     }
     
-    .search-bar {
-        margin-bottom: 20px;
+    .search-container {
+        margin-bottom: 2rem;
     }
     
-    .search-bar input {
-        width: 100%;
-        padding: 10px;
+    .search-box {
+        display: flex;
+        max-width: 500px;
+    }
+    
+    .search-input {
+        flex: 1;
+        padding: 0.8rem;
         border: 1px solid #ddd;
-        border-radius: 4px;
+        border-radius: 6px 0 0 6px;
+        outline: none;
     }
     
-    .emergency-table {
+    .search-btn {
+        background: #2E7D32;
+        color: white;
+        border: none;
+        padding: 0 1.2rem;
+        border-radius: 0 6px 6px 0;
+        cursor: pointer;
+    }
+    
+    .medical-records-table {
+        background: white;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    
+    table {
         width: 100%;
         border-collapse: collapse;
-        margin-bottom: 20px;
     }
     
-    .emergency-table th {
-        background-color: #ffebee;
-        color: #d32f2f;
+    th, td {
+        padding: 1rem;
         text-align: left;
-        padding: 12px 15px;
+        border-bottom: 1px solid #f0f0f0;
     }
     
-    .emergency-table td {
-        padding: 12px 15px;
-        border-bottom: 1px solid #eee;
+    th {
+        background-color: #F5F5F5;
+        color: #2E7D32;
+        font-weight: 600;
+    }
+    
+    tr:hover {
+        background-color: #F9F9F9;
     }
     
     .status-badge {
-        display: inline-block;
-        padding: 3px 8px;
-        border-radius: 12px;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        padding: 0.3rem 0.8rem;
+        border-radius: 20px;
         font-size: 0.8rem;
-        font-weight: bold;
+        font-weight: 500;
     }
     
     .critical {
-        background-color: #ffcdd2;
-        color: #c62828;
+        background-color: #FFEBEE;
+        color: #C62828;
     }
     
-    .btn-small {
-        padding: 5px 10px;
+    .actions-cell {
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    .btn {
+        padding: 0.5rem 0.8rem;
+        border-radius: 6px;
         font-size: 0.8rem;
-        margin-right: 5px;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        transition: all 0.3s;
+        text-decoration: none;
     }
     
-    .btn-emergency {
-        background-color: #d32f2f;
-        color: white;
+    .btn-view {
+        background: #E8F5E9;
+        color: #2E7D32;
+        border: 1px solid #C8E6C9;
     }
     
-    .text-center {
+    .btn-view:hover {
+        background: #C8E6C9;
+    }
+    
+    .btn-prescribe {
+        background: #E3F2FD;
+        color: #1565C0;
+        border: 1px solid #BBDEFB;
+    }
+    
+    .btn-prescribe:hover {
+        background: #BBDEFB;
+    }
+    
+    .no-records {
+        padding: 2rem;
         text-align: center;
+        color: #666;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
     }
     
-    .emergency-footer {
-        margin-top: 30px;
-        padding-top: 15px;
+    .access-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 2rem;
+        padding-top: 1.5rem;
         border-top: 1px solid #eee;
-        font-size: 0.9rem;
+    }
+    
+    .access-info {
         color: #666;
+        font-size: 0.9rem;
+    }
+    
+    .access-info p {
+        margin: 0.3rem 0;
+    }
+    
+    .btn-exit {
+        background: #f5f5f5;
+        color: #333;
+        border: 1px solid #ddd;
+        padding: 0.7rem 1.2rem;
+    }
+    
+    .btn-exit:hover {
+        background: #e0e0e0;
     }
 </style>
 
 <script>
-    // Fonction de recherche simple
     document.getElementById('patientSearch').addEventListener('keyup', function() {
         const input = this.value.toLowerCase();
-        const rows = document.querySelectorAll('.emergency-table tbody tr');
+        const rows = document.querySelectorAll('tbody tr');
         
         rows.forEach(row => {
+            if (row.classList.contains('no-records')) return;
+            
             const name = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
             row.style.display = name.includes(input) ? '' : 'none';
         });

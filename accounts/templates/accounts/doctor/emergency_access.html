@@ -3,32 +3,46 @@
 {% block content %}
 <div class="emergency-container">
     <div class="emergency-header">
-        <h2><i class="fas fa-exclamation-triangle"></i> Mode Urgence</h2>
-        <p class="warning-message">
-            <i class="fas fa-shield-alt"></i> Vous accédez au mode urgence. Toutes vos actions seront enregistrées et vérifiées.
-        </p>
+        <h2 class="emergency-title">
+            <i class="fas fa-exclamation-triangle"></i> Mode Urgence Activé
+        </h2>
+        <div class="emergency-alert">
+            <i class="fas fa-shield-alt"></i> 
+            Vous accédez au mode urgence. Toutes vos actions seront enregistrées et vérifiées.
+        </div>
     </div>
 
-    <div class="emergency-actions">
-        <div class="emergency-card red-alert">
-            <h3><i class="fas fa-procedures"></i> Patients Critiques</h3>
-            <p>Accès immédiat aux dossiers des patients en état critique</p>
+    <div class="emergency-grid">
+        <div class="emergency-card card-critical">
+            <div class="card-icon">
+                <i class="fas fa-procedures"></i>
+            </div>
+            <h3 class="card-title">Patients Critiques</h3>
+            <p class="card-description">Accès immédiat aux dossiers des patients en état critique</p>
             <a href="{% url 'critical_patients' %}" class="btn btn-emergency">
                 <i class="fas fa-arrow-right"></i> Accéder
             </a>
         </div>
         
         <div class="emergency-card">
-            <h3><i class="fas fa-search"></i> Recherche Rapide</h3>
-            <div class="search-box">
+            <div class="card-icon">
+                <i class="fas fa-search"></i>
+            </div>
+            <h3 class="card-title">Recherche Rapide</h3>
+            <div class="search-container">
                 <input type="text" placeholder="Nom du patient..." class="search-input">
-                <button class="search-btn"><i class="fas fa-search"></i></button>
+                <button class="search-btn">
+                    <i class="fas fa-search"></i>
+                </button>
             </div>
         </div>
         
-        <div class="emergency-card yellow-alert">
-            <h3><i class="fas fa-file-medical"></i> Dossiers Protégés</h3>
-            <p>Accès aux dossiers nécessitant une autorisation spéciale</p>
+        <div class="emergency-card card-warning">
+            <div class="card-icon">
+                <i class="fas fa-file-medical"></i>
+            </div>
+            <h3 class="card-title">Dossiers Protégés</h3>
+            <p class="card-description">Accès aux dossiers nécessitant une autorisation spéciale</p>
             <a href="{% url 'protected_records' %}" class="btn btn-warning">
                 <i class="fas fa-lock-open"></i> Accès Autorisé
             </a>
@@ -36,10 +50,186 @@
     </div>
 
     <div class="emergency-footer">
-        <p><i class="fas fa-info-circle"></i> Vous êtes responsable de toutes les actions effectuées en mode urgence.</p>
-        <a href="{% url 'dashboard' %}" class="btn btn-exit-emergency">
+        <p class="footer-warning">
+            <i class="fas fa-info-circle"></i> 
+            Vous êtes responsable de toutes les actions effectuées en mode urgence.
+        </p>
+        <a href="{% url 'dashboard' %}" class="btn btn-exit">
             <i class="fas fa-sign-out-alt"></i> Quitter le mode urgence
         </a>
     </div>
 </div>
+
+<style>
+    .emergency-container {
+        max-width: 1200px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+    
+    .emergency-header {
+        margin-bottom: 3rem;
+        text-align: center;
+    }
+    
+    .emergency-title {
+        color: #C62828;
+        font-size: 1.8rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    .emergency-alert {
+        background-color: #FFEBEE;
+        border-left: 4px solid #C62828;
+        padding: 1rem;
+        border-radius: 8px;
+        max-width: 800px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #C62828;
+        font-weight: 500;
+    }
+    
+    .emergency-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        margin-bottom: 3rem;
+    }
+    
+    .emergency-card {
+        background: white;
+        border-radius: 10px;
+        padding: 2rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        text-align: center;
+        transition: transform 0.3s;
+    }
+    
+    .emergency-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .card-critical {
+        border-top: 4px solid #C62828;
+    }
+    
+    .card-warning {
+        border-top: 4px solid #EF6C00;
+    }
+    
+    .card-icon {
+        font-size: 2.5rem;
+        color: #2E7D32;
+        margin-bottom: 1rem;
+    }
+    
+    .card-critical .card-icon {
+        color: #C62828;
+    }
+    
+    .card-warning .card-icon {
+        color: #EF6C00;
+    }
+    
+    .card-title {
+        color: #333;
+        margin-bottom: 1rem;
+    }
+    
+    .card-description {
+        color: #666;
+        margin-bottom: 1.5rem;
+        font-size: 0.9rem;
+    }
+    
+    .search-container {
+        display: flex;
+        margin-top: 1.5rem;
+    }
+    
+    .search-input {
+        flex: 1;
+        padding: 0.8rem;
+        border: 1px solid #ddd;
+        border-radius: 6px 0 0 6px;
+        outline: none;
+    }
+    
+    .search-btn {
+        background: #2E7D32;
+        color: white;
+        border: none;
+        padding: 0 1rem;
+        border-radius: 0 6px 6px 0;
+        cursor: pointer;
+    }
+    
+    .btn {
+        padding: 0.8rem 1.5rem;
+        border-radius: 6px;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.3s;
+        text-decoration: none;
+    }
+    
+    .btn-emergency {
+        background: #C62828;
+        color: white;
+        border: none;
+    }
+    
+    .btn-emergency:hover {
+        background: #B71C1C;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    .btn-warning {
+        background: #EF6C00;
+        color: white;
+        border: none;
+    }
+    
+    .btn-warning:hover {
+        background: #E65100;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    .emergency-footer {
+        text-align: center;
+        margin-top: 3rem;
+        padding-top: 2rem;
+        border-top: 1px solid #eee;
+    }
+    
+    .footer-warning {
+        color: #666;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+    
+    .btn-exit {
+        background: #f5f5f5;
+        color: #333;
+        border: 1px solid #ddd;
+    }
+    
+    .btn-exit:hover {
+        background: #e0e0e0;
+    }
+</style>
 {% endblock %}
