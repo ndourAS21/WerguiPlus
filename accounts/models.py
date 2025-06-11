@@ -2,7 +2,9 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import RegexValidator
-
+import datetime
+from datetime import datetime  # Ajout de cette importation
+from django.utils import timezone  # Importation de timezone depuis Django
 class CustomUser(AbstractUser):
     ROLES = (
         ('DOCTOR', 'Médecin'),
@@ -53,6 +55,7 @@ class UserSession(models.Model):
     def __str__(self):
         return f"Session de {self.user.username}"
 
+# models.py (ajouts à PatientRecord)
 class PatientRecord(models.Model):
     patient = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='medical_records')
     created_by = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, related_name='created_records')
@@ -61,10 +64,23 @@ class PatientRecord(models.Model):
     medical_history = models.TextField()
     allergies = models.TextField(blank=True)
     current_medications = models.TextField(blank=True)
+    blood_type = models.CharField(max_length=10, blank=True, choices=[
+        ('A+', 'A+'), ('A-', 'A-'), ('B+', 'B+'), ('B-', 'B-'),
+        ('AB+', 'AB+'), ('AB-', 'AB-'), ('O+', 'O+'), ('O-', 'O-')
+    ])
+    primary_doctor = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, 
+                                     related_name='primary_patients', limit_choices_to={'role': 'DOCTOR'})
+    last_consultation = models.DateField(null=True, blank=True)
+    next_appointment = models.DateField(null=True, blank=True)
+        # ... autres champs existants ...
+    is_critical = models.BooleanField(default=False)
+    critical_since = models.DateTimeField(null=True, blank=True)
+    critical_reason = models.TextField(blank=True)
+    priority = models.CharField(max_length=1, choices=[('1', 'Urgence vitale'), ('2', 'Urgence sérieuse'), ('3', 'Urgence mineure')], blank=True)
     
     def __str__(self):
         return f"Dossier médical de {self.patient.get_full_name()}"
-
+    
 class Prescription(models.Model):
     patient = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='prescriptions')
     doctor = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='issued_prescriptions')
@@ -73,7 +89,15 @@ class Prescription(models.Model):
     dosage = models.TextField()
     instructions = models.TextField()
     is_dispensed = models.BooleanField(default=False)
-    
+    dispensed_by = models.ForeignKey(
+        CustomUser, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True,
+        related_name='dispensed_prescriptions'
+    )
+    dispensed_at = models.DateTimeField(null=True, blank=True)
+    notes = models.TextField(blank=True)
     def __str__(self):
         return f"Prescription pour {self.patient.get_full_name()} par Dr. {self.doctor.last_name}"
 
@@ -210,3 +234,43 @@ class SecuritySettings(models.Model):
         """Retourne les paramètres de sécurité (singleton)"""
         obj, created = cls.objects.get_or_create(pk=1)
         return obj    
+    
+class Appointment(models.Model):
+    STATUS_CHOICES = (
+        ('SCHEDULED', 'Planifié'),
+        ('COMPLETED', 'Terminé'),
+        ('CANCELLED', 'Annulé'),
+    )
+    
+    REASON_CHOICES = (
+        ('CONSULTATION', 'Consultation générale'),
+        ('FOLLOWUP', 'Suivi de traitement'),
+        ('URGENT', 'Urgence'),
+        ('OTHER', 'Autre'),
+    )
+    
+    patient = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='patient_appointments')
+    doctor = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='doctor_appointments')
+    date = models.DateField()
+    time = models.TimeField()
+    reason = models.CharField(max_length=20, choices=REASON_CHOICES)
+    custom_reason = models.CharField(max_length=100, blank=True)
+    notes = models.TextField(blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='SCHEDULED')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    @property
+    def is_past(self):
+        from django.utils import timezone
+        appointment_datetime = datetime.combine(self.date, self.time)
+        return appointment_datetime < timezone.now()
+    
+    def __str__(self):
+        return f"Rdv {self.date} {self.time} - {self.patient} avec Dr. {self.doctor}"
+    
+
+    @property
+    def is_past(self):
+        appointment_datetime = datetime.combine(self.date, self.time)
+        return appointment_datetime < timezone.now()

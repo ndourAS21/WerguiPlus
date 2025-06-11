@@ -12,37 +12,68 @@
         </div>
     </div>
 
+    <!-- Section pour marquer des patients comme critiques -->
+    <div class="mark-critical-section">
+        <h3><i class="fas fa-user-plus"></i> Marquer un patient comme critique</h3>
+        <form method="post" class="critical-form">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="mark_critical">
+            
+            <div class="form-group">
+                <label>Sélectionner un patient:</label>
+                <select name="patient_id" required>
+                    {% for patient in regular_patients %}
+                    <option value="{{ patient.id }}">{{ patient.get_full_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Priorité:</label>
+                <select name="priority" required>
+                    <option value="1">Urgence vitale</option>
+                    <option value="2" selected>Urgence sérieuse</option>
+                    <option value="3">Urgence mineure</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Raison:</label>
+                <textarea name="reason" placeholder="Décrivez brièvement la situation..." required></textarea>
+            </div>
+            
+            <button type="submit" class="btn btn-mark-critical">
+                <i class="fas fa-exclamation-triangle"></i> Marquer comme critique
+            </button>
+        </form>
+    </div>
+
     <div class="critical-grid">
         {% for patient in critical_patients %}
-        <div class="patient-card priority-{{ patient.priority }}">
+        <div class="patient-card priority-{{ patient.patientrecord_set.first.priority }}">
             <div class="patient-header">
-                <div class="priority-badge priority-{{ patient.priority }}">
-                    <i class="fas fa-{% if patient.priority == '1' %}heartbeat{% else %}exclamation{% endif %}"></i>
-                    Priorité {{ patient.priority }}
+                <div class="priority-badge priority-{{ patient.patientrecord.priority }}">
+                    <i class="fas fa-{% if patient.patientrecord.priority == '1' %}heartbeat{% else %}exclamation{% endif %}"></i>
+                    Priorité {{ patient.patientrecord.priority }}
                 </div>
                 <h3 class="patient-name">{{ patient.get_full_name }}</h3>
                 <div class="patient-meta">
-                    <span><i class="fas fa-bed"></i> {{ patient.location }}</span>
-                    <span><i class="fas fa-clock"></i> {{ patient.last_update|timesince }}</span>
+                    <span><i class="fas fa-clock"></i> Depuis {{ patient.patientrecord.critical_since|timesince }}</span>
                 </div>
-            </div>
-            
-            <div class="patient-vitals">
-                <div class="vital-item {% if patient.heart_rate > 100 or patient.heart_rate < 60 %}abnormal{% endif %}">
-                    <div class="vital-label">Fréquence Cardiaque</div>
-                    <div class="vital-value">{{ patient.heart_rate }} bpm</div>
-                </div>
-                <div class="vital-item {% if patient.blood_pressure_systolic > 140 or patient.blood_pressure_diastolic > 90 %}abnormal{% endif %}">
-                    <div class="vital-label">Tension Artérielle</div>
-                    <div class="vital-value">{{ patient.blood_pressure_systolic }}/{{ patient.blood_pressure_diastolic }}</div>
-                </div>
-                <div class="vital-item {% if patient.oxygen_saturation < 92 %}abnormal{% endif %}">
-                    <div class="vital-label">Saturation O2</div>
-                    <div class="vital-value">{{ patient.oxygen_saturation }}%</div>
+                <div class="patient-reason">
+                    {{ patient.patientrecord.critical_reason }}
                 </div>
             </div>
             
             <div class="patient-actions">
+                <form method="post" class="unmark-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="unmark_critical">
+                    <input type="hidden" name="patient_id" value="{{ patient.id }}">
+                    <button type="submit" class="btn btn-unmark">
+                        <i class="fas fa-check-circle"></i> Retirer l'urgence
+                    </button>
+                </form>
                 <a href="{% url 'view_patient_detail' patient.id %}" class="btn btn-view">
                     <i class="fas fa-file-medical"></i> Dossier
                 </a>
@@ -103,6 +134,55 @@
         color: #C62828;
     }
     
+    .mark-critical-section {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    
+    .critical-form {
+        display: grid;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+    
+    .form-group {
+        display: grid;
+        gap: 0.5rem;
+    }
+    
+    .form-group label {
+        font-weight: 500;
+    }
+    
+    .form-group select, 
+    .form-group textarea {
+        padding: 0.8rem;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        width: 100%;
+    }
+    
+    .btn-mark-critical {
+        background: #C62828;
+        color: white;
+        padding: 0.8rem;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.3s;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        justify-content: center;
+    }
+    
+    .btn-mark-critical:hover {
+        background: #B71C1C;
+    }
+    
     .critical-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
@@ -116,6 +196,8 @@
         overflow: hidden;
         box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         transition: transform 0.3s;
+        display: flex;
+        flex-direction: column;
     }
     
     .patient-card:hover {
@@ -174,6 +256,7 @@
         gap: 1rem;
         font-size: 0.9rem;
         color: #666;
+        margin: 0.5rem 0;
     }
     
     .patient-meta span {
@@ -182,41 +265,20 @@
         gap: 0.3rem;
     }
     
-    .patient-vitals {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
+    .patient-reason {
         background: #F5F5F5;
         padding: 1rem;
-        gap: 1rem;
-    }
-    
-    .vital-item {
-        text-align: center;
-        padding: 0.5rem;
         border-radius: 6px;
-        background: white;
-    }
-    
-    .vital-item.abnormal {
-        background: #FFEBEE;
-        color: #C62828;
-    }
-    
-    .vital-label {
-        font-size: 0.8rem;
-        font-weight: 500;
-        margin-bottom: 0.3rem;
-    }
-    
-    .vital-value {
-        font-weight: 600;
-        font-size: 1.1rem;
+        margin-top: 1rem;
+        font-size: 0.9rem;
     }
     
     .patient-actions {
         display: flex;
         padding: 1rem;
         gap: 1rem;
+        margin-top: auto;
+        flex-wrap: wrap;
     }
     
     .btn {
@@ -227,6 +289,8 @@
         align-items: center;
         gap: 0.5rem;
         transition: all 0.3s;
+        text-decoration: none;
+        cursor: pointer;
     }
     
     .btn-view {
@@ -247,6 +311,16 @@
     
     .btn-intervene:hover {
         background: #FFCDD2;
+    }
+    
+    .btn-unmark {
+        background: #2E7D32;
+        color: white;
+        border: none;
+    }
+    
+    .btn-unmark:hover {
+        background: #1B5E20;
     }
     
     .team-notes-section {

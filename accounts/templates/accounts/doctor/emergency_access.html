@@ -17,10 +17,22 @@
             <div class="card-icon">
                 <i class="fas fa-procedures"></i>
             </div>
-            <h3 class="card-title">Patients Critiques</h3>
-            <p class="card-description">Accès immédiat aux dossiers des patients en état critique</p>
+            <h3 class="card-title">Patients Critiques ({{ critical_count }})</h3>
+            <div class="critical-list">
+                {% for patient in critical_patients %}
+                <div class="critical-patient">
+                    <span class="patient-name">{{ patient.get_full_name }}</span>
+                    <span class="priority priority-{{ patient.patientrecord.priority }}">
+                        Priorité {{ patient.patientrecord.priority }}
+                    </span>
+                    <span class="critical-time">
+                        Depuis {{ patient.patientrecord.critical_since|timesince }}
+                    </span>
+                </div>
+                {% endfor %}
+            </div>
             <a href="{% url 'critical_patients' %}" class="btn btn-emergency">
-                <i class="fas fa-arrow-right"></i> Accéder
+                <i class="fas fa-arrow-right"></i> Gérer les patients critiques
             </a>
         </div>
         
@@ -110,6 +122,8 @@
         box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         text-align: center;
         transition: transform 0.3s;
+        display: flex;
+        flex-direction: column;
     }
     
     .emergency-card:hover {
@@ -149,6 +163,53 @@
         font-size: 0.9rem;
     }
     
+    .critical-list {
+        margin: 1rem 0;
+        max-height: 200px;
+        overflow-y: auto;
+        text-align: left;
+        flex-grow: 1;
+    }
+    
+    .critical-patient {
+        padding: 0.8rem;
+        border-bottom: 1px solid #eee;
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr;
+        gap: 1rem;
+        align-items: center;
+        font-size: 0.9rem;
+    }
+    
+    .priority {
+        padding: 0.3rem 0.6rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-align: center;
+    }
+    
+    .priority-1 {
+        background: #FFEBEE;
+        color: #C62828;
+    }
+    
+    .priority-2 {
+        background: #FFF3E0;
+        color: #EF6C00;
+    }
+    
+    .priority-3 {
+        background: #FFF8E1;
+        color: #FBC02D;
+    }
+    
+    .critical-time {
+        font-size: 0.8rem;
+        color: #666;
+        text-align: right;
+    }
+    
     .search-container {
         display: flex;
         margin-top: 1.5rem;
@@ -180,6 +241,7 @@
         gap: 0.5rem;
         transition: all 0.3s;
         text-decoration: none;
+        margin-top: auto;
     }
     
     .btn-emergency {

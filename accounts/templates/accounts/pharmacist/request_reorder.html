@@ -6,16 +6,16 @@
         <h2><i class="fas fa-shopping-cart"></i> Nouvelle Commande</h2>
         <div class="order-steps">
             <div class="step active">
-                <span>1</span>
-                <p>Sélection</p>
+                <div class="step-number">1</div>
+                <div class="step-label">Sélection</div>
             </div>
             <div class="step">
-                <span>2</span>
-                <p>Validation</p>
+                <div class="step-number">2</div>
+                <div class="step-label">Validation</div>
             </div>
             <div class="step">
-                <span>3</span>
-                <p>Confirmation</p>
+                <div class="step-number">3</div>
+                <div class="step-label">Confirmation</div>
             </div>
         </div>
     </div>
@@ -25,7 +25,9 @@
             <h3><i class="fas fa-search"></i> Recherche de Médicaments</h3>
             <div class="search-box">
                 <input type="text" placeholder="Nom du médicament ou code..." class="search-input">
-                <button class="search-btn"><i class="fas fa-search"></i></button>
+                <button class="search-btn btn-pharmacist">
+                    <i class="fas fa-search"></i> Rechercher
+                </button>
             </div>
             
             <div class="medication-results">
@@ -33,11 +35,12 @@
                 <div class="medication-item" data-med="{{ med.id }}">
                     <div class="med-info">
                         <h4>{{ med.name }}</h4>
-                        <p>{{ med.dosage }} | Stock actuel: {{ med.stock }}</p>
+                        <p>{{ med.dosage }} | Stock actuel: <strong>{{ med.stock }}</strong> (seuil: {{ med.threshold }})</p>
+                        <p class="supplier-info">Fournisseur: {{ med.supplier }}</p>
                     </div>
                     <div class="med-order">
                         <input type="number" min="1" max="1000" value="{{ med.reorder_quantity }}" class="order-quantity">
-                        <button class="btn btn-add-to-order">
+                        <button class="btn-pharmacist btn-add-to-order">
                             <i class="fas fa-cart-plus"></i> Ajouter
                         </button>
                     </div>
@@ -52,16 +55,27 @@
                 <div class="order-items-header">
                     <span>Médicament</span>
                     <span>Quantité</span>
-                    <span>Prix</span>
+                    <span>Prix Unitaire</span>
+                    <span>Total</span>
                     <span></span>
                 </div>
                 <div class="order-items-list">
-                    <!-- Les éléments de commande seront ajoutés dynamiquement -->
+                    <!-- Les éléments seront ajoutés dynamiquement ici -->
                     <p class="empty-message">Aucun médicament sélectionné</p>
                 </div>
-                <div class="order-total">
-                    <strong>Total:</strong>
-                    <span class="total-amount">0 FCFA</span>
+                <div class="order-totals">
+                    <div class="order-subtotal">
+                        <span>Sous-total:</span>
+                        <span class="subtotal-amount">0 FCFA</span>
+                    </div>
+                    <div class="order-shipping">
+                        <span>Livraison:</span>
+                        <span class="shipping-amount">0 FCFA</span>
+                    </div>
+                    <div class="order-total">
+                        <strong>Total:</strong>
+                        <span class="total-amount">0 FCFA</span>
+                    </div>
                 </div>
             </div>
             
@@ -70,7 +84,9 @@
                 <select id="supplier" class="form-select">
                     <option value="">Sélectionner un fournisseur...</option>
                     {% for supplier in suppliers %}
-                    <option value="{{ supplier.id }}">{{ supplier.name }} ({{ supplier.delivery_time }} jours)</option>
+                    <option value="{{ supplier.id }}" data-delivery="{{ supplier.delivery_time }}" data-shipping="{{ supplier.shipping_cost }}">
+                        {{ supplier.name }} (Délai: {{ supplier.delivery_time }} jours)
+                    </option>
                     {% endfor %}
                 </select>
             </div>
@@ -81,34 +97,337 @@
             </div>
             
             <div class="order-actions">
-                <button class="btn btn-submit-order" disabled>
+                <button class="btn-pharmacist btn-submit-order" disabled>
                     <i class="fas fa-paper-plane"></i> Soumettre la Commande
                 </button>
-                <button class="btn btn-cancel-order">
-                    <i class="fas fa-trash"></i> Annuler
-                </button>
+                <a href="{% url 'view_inventory' %}" class="btn-pharmacist-outline">
+                    <i class="fas fa-times"></i> Annuler
+                </a>
             </div>
         </div>
     </div>
 </div>
 
-<script>
-// Script pour gérer la sélection des médicaments et la création de commande
-document.querySelectorAll('.btn-add-to-order').forEach(btn => {
-    btn.addEventListener('click', function() {
-        const medItem = this.closest('.medication-item');
-        const medId = medItem.dataset.med;
-        const medName = medItem.querySelector('h4').textContent;
-        const quantity = medItem.querySelector('.order-quantity').value;
-        
-        addToOrder(medId, medName, quantity);
-    });
-});
+<style>
+    .pharmacist-container {
+        background: white;
+        padding: 2rem;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
 
-function addToOrder(medId, medName, quantity) {
-    // Implémentation de la logique d'ajout à la commande
-    console.log(`Ajout de ${quantity} ${medName} (ID: ${medId}) à la commande`);
-    // Mettre à jour l'interface utilisateur
-}
+    .order-steps {
+        display: flex;
+        justify-content: space-between;
+        margin: 2rem 0;
+        position: relative;
+    }
+
+    .order-steps::before {
+        content: '';
+        position: absolute;
+        top: 15px;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background-color: #e0e0e0;
+        z-index: 1;
+    }
+
+    .step {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        position: relative;
+        z-index: 2;
+    }
+
+    .step-number {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background-color: #e0e0e0;
+        color: #666;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+    }
+
+    .step.active .step-number {
+        background-color: var(--medical-green);
+        color: white;
+    }
+
+    .step-label {
+        font-size: 0.9rem;
+        color: #666;
+    }
+
+    .step.active .step-label {
+        color: var(--medical-green);
+        font-weight: bold;
+    }
+
+    .order-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+    }
+
+    @media (max-width: 992px) {
+        .order-container {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .medication-selection, .order-summary {
+        background-color: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 0 5px rgba(0,0,0,0.05);
+    }
+
+    .search-box {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .search-input {
+        flex-grow: 1;
+        padding: 0.75rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
+
+    .medication-results {
+        max-height: 600px;
+        overflow-y: auto;
+    }
+
+    .medication-item {
+        padding: 1rem;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+    }
+
+    .med-info h4 {
+        margin: 0 0 0.5rem 0;
+        color: var(--medical-green);
+    }
+
+    .med-info p {
+        margin: 0.25rem 0;
+        font-size: 0.9rem;
+        color: #666;
+    }
+
+    .supplier-info {
+        font-size: 0.8rem;
+        color: #999;
+    }
+
+    .med-order {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 1rem;
+    }
+
+    .order-quantity {
+        width: 80px;
+        padding: 0.5rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        text-align: center;
+    }
+
+    .order-items-container {
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .order-items-header {
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr 1fr 0.5fr;
+        gap: 0.5rem;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #e0e0e0;
+        font-weight: bold;
+        font-size: 0.9rem;
+    }
+
+    .order-items-list {
+        min-height: 200px;
+    }
+
+    .empty-message {
+        text-align: center;
+        color: #999;
+        padding: 2rem 0;
+    }
+
+    .order-totals {
+        border-top: 1px solid #e0e0e0;
+        padding-top: 1rem;
+    }
+
+    .order-subtotal, .order-shipping, .order-total {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.5rem;
+    }
+
+    .order-total {
+        font-weight: bold;
+        font-size: 1.1rem;
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid #e0e0e0;
+    }
+
+    .supplier-selection, .order-notes {
+        margin-bottom: 1.5rem;
+    }
+
+    label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: bold;
+    }
+
+    .form-select, .form-textarea {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
+
+    .form-textarea {
+        min-height: 100px;
+    }
+
+    .order-actions {
+        display: flex;
+        gap: 1rem;
+    }
+
+    .btn-pharmacist-outline {
+        padding: 0.75rem 1.5rem;
+        border: 1px solid var(--medical-green);
+        color: var(--medical-green);
+        background-color: white;
+        border-radius: 4px;
+        text-decoration: none;
+        text-align: center;
+        transition: all 0.3s;
+    }
+
+    .btn-pharmacist-outline:hover {
+        background-color: #f5f5f5;
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Gestion de l'ajout de médicaments à la commande
+    document.querySelectorAll('.btn-add-to-order').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const medItem = this.closest('.medication-item');
+            const medId = medItem.dataset.med;
+            const medName = medItem.querySelector('h4').textContent;
+            const dosage = medItem.querySelector('p').textContent.split('|')[0].trim();
+            const quantity = medItem.querySelector('.order-quantity').value;
+            const price = 1000; // À remplacer par le prix réel
+            
+            addToOrder(medId, medName, dosage, quantity, price);
+        });
+    });
+
+    function addToOrder(medId, medName, dosage, quantity, price) {
+        const orderList = document.querySelector('.order-items-list');
+        
+        // Supprimer le message "Aucun médicament sélectionné" s'il existe
+        const emptyMsg = orderList.querySelector('.empty-message');
+        if (emptyMsg) emptyMsg.remove();
+        
+        // Vérifier si le médicament est déjà dans la commande
+        const existingItem = orderList.querySelector(`[data-med="${medId}"]`);
+        
+        if (existingItem) {
+            // Mettre à jour la quantité
+            const qtyInput = existingItem.querySelector('.item-quantity');
+            qtyInput.value = parseInt(qtyInput.value) + parseInt(quantity);
+            updateItemTotal(existingItem);
+        } else {
+            // Créer un nouvel élément
+            const itemHTML = `
+                <div class="order-item" data-med="${medId}">
+                    <div class="item-name">
+                        <strong>${medName}</strong>
+                        <small>${dosage}</small>
+                    </div>
+                    <input type="number" min="1" value="${quantity}" class="item-quantity">
+                    <span class="item-price">${price} FCFA</span>
+                    <span class="item-total">${price * quantity} FCFA</span>
+                    <button class="btn-remove-item">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            `;
+            
+            orderList.insertAdjacentHTML('beforeend', itemHTML);
+            
+            // Ajouter un écouteur d'événement pour la suppression
+            const newItem = orderList.lastElementChild;
+            newItem.querySelector('.btn-remove-item').addEventListener('click', function() {
+                newItem.remove();
+                updateOrderTotal();
+                if (orderList.children.length === 0) {
+                    orderList.innerHTML = '<p class="empty-message">Aucun médicament sélectionné</p>';
+                }
+            });
+            
+            // Ajouter un écouteur pour la modification de quantité
+            newItem.querySelector('.item-quantity').addEventListener('change', function() {
+                updateItemTotal(newItem);
+            });
+        }
+        
+        updateOrderTotal();
+        document.querySelector('.btn-submit-order').disabled = false;
+    }
+
+    function updateItemTotal(item) {
+        const quantity = item.querySelector('.item-quantity').value;
+        const price = parseInt(item.querySelector('.item-price').textContent);
+        item.querySelector('.item-total').textContent = `${quantity * price} FCFA`;
+        updateOrderTotal();
+    }
+
+    function updateOrderTotal() {
+        let subtotal = 0;
+        document.querySelectorAll('.order-item').forEach(item => {
+            subtotal += parseInt(item.querySelector('.item-total').textContent);
+        });
+        
+        const shippingSelect = document.getElementById('supplier');
+        let shipping = 0;
+        if (shippingSelect.selectedOptions[0].dataset.shipping) {
+            shipping = parseInt(shippingSelect.selectedOptions[0].dataset.shipping);
+        }
+        
+        document.querySelector('.subtotal-amount').textContent = `${subtotal} FCFA`;
+        document.querySelector('.shipping-amount').textContent = `${shipping} FCFA`;
+        document.querySelector('.total-amount').textContent = `${subtotal + shipping} FCFA`;
+    }
+
+    // Mettre à jour le total quand le fournisseur change
+    document.getElementById('supplier').addEventListener('change', updateOrderTotal);
+});
 </script>
 {% endblock %}

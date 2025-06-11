@@ -1,75 +1,124 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="nurse-container">
-    <div class="nurse-header">
-        <h2><i class="fas fa-pills"></i> Administration de Médicaments</h2>
-        <div class="patient-med-info">
-            <h3>{{ patient.get_full_name }}</h3>
-            <p><i class="fas fa-prescription-bottle-alt"></i> {{ prescriptions|length }} prescription(s) active(s)</p>
+<div class="nurse-container" style="background-color: #f5faf5; min-height: 100vh; padding: 20px;">
+    <div class="card" style="border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+        <div class="card-header" style="background-color: #27ae60; color: white; border-radius: 10px 10px 0 0; padding: 15px 20px;">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2 style="margin: 0;"><i class="fas fa-pills"></i> Administration des Médicaments</h2>
+                <select id="patientSelect" class="form-select" style="width: 300px; background-color: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.3);">
+                    <option value="">Sélectionnez un patient...</option>
+                    {% for p in patients %}
+                    <option value="{{ p.id }}" {% if p.id == patient.id %}selected{% endif %}>{{ p.get_full_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
         </div>
-    </div>
 
-    <div class="medication-list">
-        {% for prescription in prescriptions %}
-        <div class="medication-card">
-            <div class="medication-header">
-                <h4>{{ prescription.medication_name }}</h4>
-                <span class="medication-status {% if prescription.is_administered %}administered{% else %}pending{% endif %}">
-                    {% if prescription.is_administered %}
-                    <i class="fas fa-check-circle"></i> Administré
+        <div class="card-body" style="padding: 0;">
+            {% if patient %}
+            <div class="patient-info" style="background-color: #f8f9fa; padding: 15px 20px; border-bottom: 1px solid #eee;">
+                <div class="d-flex align-items-center">
+                    <div class="patient-avatar" style="margin-right: 15px;">
+                        <i class="fas fa-user-circle" style="font-size: 3em; color: #27ae60;"></i>
+                    </div>
+                    <div>
+                        <h3 style="margin: 0; color: #2c3e50;">{{ patient.get_full_name }}</h3>
+                        <div style="display: flex; gap: 15px; margin-top: 5px;">
+                            <span style="color: #7f8c8d;"><i class="fas fa-id-badge"></i> {{ patient.id_number }}</span>
+                            <span style="color: #7f8c8d;"><i class="fas fa-bed"></i> Chambre {{ patient.room_number|default:"N/A" }}</span>
+                            <span style="color: #7f8c8d;"><i class="fas fa-user-md"></i> Dr. {{ patient.patient_record.primary_doctor.get_full_name }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="medication-content" style="padding: 20px;">
+                {% if patient %}
+                    {% if prescriptions %}
+                    <div class="table-responsive">
+                        <table class="table" style="margin-bottom: 0;">
+                            <thead style="background-color: #e8f5e9;">
+                                <tr>
+                                    <th style="width: 25%;">Médicament</th>
+                                    <th style="width: 15%;">Posologie</th>
+                                    <th style="width: 30%;">Instructions</th>
+                                    <th style="width: 15%;">Prescrit par</th>
+                                    <th style="width: 15%;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for prescription in prescriptions %}
+                                <tr>
+                                    <td style="vertical-align: middle;">
+                                        <strong>{{ prescription.medication }}</strong>
+                                        {% if prescription.is_administered %}
+                                        <span class="badge bg-success" style="margin-left: 5px;">Déjà administré</span>
+                                        {% else %}
+                                        <span class="badge bg-warning text-dark" style="margin-left: 5px;">À administrer</span>
+                                        {% endif %}
+                                    </td>
+                                    <td style="vertical-align: middle;">{{ prescription.dosage }}</td>
+                                    <td style="vertical-align: middle;">{{ prescription.instructions|truncatechars:50 }}</td>
+                                    <td style="vertical-align: middle;">Dr. {{ prescription.doctor.last_name }}</td>
+                                    <td style="vertical-align: middle;">
+                                        {% if not prescription.is_administered %}
+                                        <button class="btn btn-sm btn-success administer-btn" 
+                                                data-prescription-id="{{ prescription.id }}"
+                                                style="background-color: #27ae60; border: none;">
+                                            <i class="fas fa-syringe"></i> Administrer
+                                        </button>
+                                        {% else %}
+                                        <span class="text-success"><i class="fas fa-check-circle"></i> Fait</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
                     {% else %}
-                    <i class="fas fa-clock"></i> En attente
+                    <div class="alert alert-info" style="background-color: #e3f2fd; color: #0d47a1; border-color: #bbdefb;">
+                        <i class="fas fa-info-circle"></i> Aucun médicament à administrer pour ce patient.
+                    </div>
                     {% endif %}
-                </span>
-            </div>
-            
-            <div class="medication-details">
-                <p><strong>Posologie:</strong> {{ prescription.dosage }}</p>
-                <p><strong>Fréquence:</strong> {{ prescription.frequency }}</p>
-                <p><strong>Prochaine dose:</strong> {{ prescription.next_dose|time }}</p>
-            </div>
-            
-            <div class="medication-actions">
-                {% if not prescription.is_administered %}
-                <button class="btn btn-administer" data-prescription="{{ prescription.id }}">
-                    <i class="fas fa-syringe"></i> Administrer
-                </button>
+                {% else %}
+                <div class="alert alert-warning" style="background-color: #fff8e1; color: #ff8f00; border-color: #ffecb3;">
+                    <i class="fas fa-exclamation-triangle"></i> Veuillez sélectionner un patient pour voir ses prescriptions.
+                </div>
                 {% endif %}
-                <button class="btn btn-notes" data-prescription="{{ prescription.id }}">
-                    <i class="fas fa-notes-medical"></i> Notes
-                </button>
             </div>
         </div>
-        {% endfor %}
     </div>
+</div>
 
-    <div class="administration-modal" id="administerModal">
+<!-- Modal d'administration -->
+<div class="modal fade" id="administerModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
         <div class="modal-content">
-            <h3><i class="fas fa-syringe"></i> Confirmer l'Administration</h3>
-            <p>Vous êtes sur le point d'administrer <strong id="medName"></strong> à {{ patient.get_full_name }}</p>
-            
+            <div class="modal-header" style="background-color: #27ae60; color: white;">
+                <h5 class="modal-title"><i class="fas fa-syringe"></i> Confirmer l'administration</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="filter: invert(1);"></button>
+            </div>
             <form id="administerForm" method="post">
-                {% csrf_token %}
-                <input type="hidden" name="prescription_id" id="prescriptionId">
-                
-                <div class="form-group">
-                    <label for="administer_time">Heure d'administration</label>
-                    <input type="time" id="administer_time" name="administer_time" required class="form-input" value="{% now 'H:i' %}">
+                <div class="modal-body">
+                    {% csrf_token %}
+                    <input type="hidden" name="prescription_id" id="prescriptionId">
+                    
+                    <div class="mb-3">
+                        <label for="administer_time" class="form-label">Heure réelle d'administration</label>
+                        <input type="time" class="form-control" name="administer_time" id="administer_time" required value="{% now 'H:i' %}">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="administer_notes" class="form-label">Notes</label>
+                        <textarea class="form-control" name="administer_notes" id="administer_notes" rows="3" placeholder="Réaction du patient, observations..."></textarea>
+                    </div>
                 </div>
-                
-                <div class="form-group">
-                    <label for="administer_notes">Notes</label>
-                    <textarea id="administer_notes" name="administer_notes" class="form-textarea" placeholder="Réaction du patient, observations..."></textarea>
-                </div>
-                
-                <div class="form-actions">
-                    <button type="submit" class="btn btn-confirm">
-                        <i class="fas fa-check"></i> Confirmer
-                    </button>
-                    <button type="button" class="btn btn-cancel" id="cancelAdminister">
-                        <i class="fas fa-times"></i> Annuler
-                    </button>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><i class="fas fa-times"></i> Annuler</button>
+                    <button type="submit" class="btn btn-success"><i class="fas fa-check"></i> Confirmer</button>
                 </div>
             </form>
         </div>
@@ -77,20 +126,22 @@
 </div>
 
 <script>
-document.querySelectorAll('.btn-administer').forEach(btn => {
-    btn.addEventListener('click', function() {
-        const prescriptionId = this.dataset.prescription;
-        const medicationCard = this.closest('.medication-card');
-        const medName = medicationCard.querySelector('h4').textContent;
-        
-        document.getElementById('medName').textContent = medName;
-        document.getElementById('prescriptionId').value = prescriptionId;
-        document.getElementById('administerModal').style.display = 'flex';
-    });
+document.getElementById('patientSelect').addEventListener('change', function() {
+    const patientId = this.value;
+    if (patientId) {
+        window.location.href = `/nurse/administer-medication/?patient_id=${patientId}`;
+    }
 });
 
-document.getElementById('cancelAdminister').addEventListener('click', function() {
-    document.getElementById('administerModal').style.display = 'none';
+document.querySelectorAll('.administer-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const prescriptionId = this.dataset.prescriptionId;
+        document.getElementById('prescriptionId').value = prescriptionId;
+        
+        // Initialiser le modal Bootstrap
+        const modal = new bootstrap.Modal(document.getElementById('administerModal'));
+        modal.show();
+    });
 });
 </script>
 {% endblock %}

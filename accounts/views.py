@@ -7,6 +7,15 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.conf import settings
 from django.contrib import messages
+# Ajouter ces imports en haut du fichier views.py
+from django.http import HttpResponse
+from reportlab.pdfgen import canvas
+from io import BytesIO
+import json
+import openpyxl
+from django.utils import timezone
+from datetime import timedelta
+from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_protect
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.utils import timezone
@@ -230,7 +239,8 @@ def nurse_dashboard_data(user):
             {
                 'title': 'Actions Rapides',
                 'buttons': [
-                    {'url': 'quick_vitals', 'text': 'Saisir Constantes', 'class': 'btn-primary'},
+                    # Utiliser l'URL existante view_patient_vitals
+                    {'url': 'view_patient_vitals', 'text': 'Saisir Constantes', 'class': 'btn-primary'},
                     {'url': 'medication_administration', 'text': 'Administration Médicaments', 'class': 'btn-primary'},
                 ]
             }
@@ -443,7 +453,7 @@ def create_prescription(request):
     })
 
 @login_required
-@role_required('DOCTOR')
+@role_required('PHARMACIST', 'DOCTOR', 'NURSE') 
 def view_prescriptions(request):
     prescriptions = Prescription.objects.filter(doctor=request.user).select_related('patient')
     return render(request, 'accounts/doctor/view_prescriptions.html', {
@@ -502,6 +512,10 @@ def view_exam_results(request):
 @login_required
 @role_required('DOCTOR')
 def emergency_access(request):
+    critical_records = PatientRecord.objects.filter(
+        is_critical=True
+    ).select_related('patient')
+    
     AuditLog.objects.create(
         user=request.user,
         action='ACCESS',
@@ -510,16 +524,52 @@ def emergency_access(request):
         details="Accès au mode urgence activé",
         ip_address=get_client_ip(request)
     )
-    return redirect('protected_records')
-
+    
+    return render(request, 'accounts/doctor/emergency_access.html', {
+        'critical_patients': [record.patient for record in critical_records],
+        'critical_count': critical_records.count()
+    })
 @login_required
 @role_required('DOCTOR')
 def critical_patients(request):
+    if request.method == 'POST':
+        patient_id = request.POST.get('patient_id')
+        action = request.POST.get('action')
+        
+        patient = get_object_or_404(CustomUser, id=patient_id, role='PATIENT')
+        record = PatientRecord.objects.get(patient=patient)
+        
+        if action == 'mark_critical':
+            record.is_critical = True
+            record.critical_since = timezone.now()
+            record.priority = request.POST.get('priority', '2')
+            record.critical_reason = request.POST.get('reason', '')
+            messages.success(request, f"{patient.get_full_name()} marqué comme patient critique")
+        elif action == 'unmark_critical':
+            record.is_critical = False
+            record.critical_since = None
+            record.priority = ''
+            messages.success(request, f"{patient.get_full_name()} retiré des patients critiques")
+        
+        record.save()
+        return redirect('critical_patients')
+    
+    # Récupération optimisée des patients critiques
     critical_records = PatientRecord.objects.filter(
-        medical_history__icontains='urgence'
+        is_critical=True
     ).select_related('patient')
+    
+    # Récupération des patients non critiques
+    regular_patients = CustomUser.objects.filter(
+        role='PATIENT'
+    ).exclude(
+        id__in=[record.patient_id for record in critical_records]
+    )
+    
     return render(request, 'accounts/doctor/critical_patients.html', {
-        'critical_patients': critical_records
+        'critical_patients': [record.patient for record in critical_records],
+        'regular_patients': regular_patients,
+        'critical_count': critical_records.count()
     })
 
 @login_required
@@ -532,21 +582,347 @@ def protected_records(request):
         'critical_patients': critical_patients
     })
 
+# Ajoutez cette vue dans votre fichier views.py
+
+# Ajoutez ces vues dans votre fichier views.py
+
+@login_required
+@role_required('DOCTOR', 'PHARMACIST')
+def print_prescription(request, prescription_id):
+    """Vue pour imprimer/afficher une prescription"""
+    prescription = get_object_or_404(Prescription, id=prescription_id)
+    
+    # Vérifier que le médecin peut accéder à cette prescription
+    if request.user.role == 'DOCTOR' and prescription.doctor != request.user:
+        messages.error(request, "Vous n'avez pas accès à cette prescription.")
+        return redirect('view_prescriptions')
+    
+    # Logger l'accès à la prescription
+    AuditLog.objects.create(
+        user=request.user,
+        action='VIEW',
+        model='Prescription',
+        object_id=prescription.id,
+        details=f"Impression prescription pour {prescription.patient.get_full_name()}",
+        ip_address=get_client_ip(request)
+    )
+    
+    context = {
+        'prescription': prescription,
+        'patient': prescription.patient,
+        'doctor': prescription.doctor,
+    }
+    
+    return render(request, 'accounts/doctor/print_prescription.html', context)
+
+@login_required
+@role_required('DOCTOR')
+def edit_prescription(request, prescription_id):
+    """Vue pour modifier une prescription"""
+    prescription = get_object_or_404(Prescription, id=prescription_id)
+    
+    # Vérifier que le médecin peut modifier cette prescription
+    if prescription.doctor != request.user:
+        messages.error(request, "Vous ne pouvez modifier que vos propres prescriptions.")
+        return redirect('view_prescriptions')
+    
+    if request.method == 'POST':
+        try:
+            # Sauvegarder les anciennes valeurs pour l'audit
+            old_medication = prescription.medication
+            old_dosage = prescription.dosage
+            old_instructions = prescription.instructions
+            
+            # Modifier la prescription
+            prescription.medication = request.POST.get('medication')
+            prescription.dosage = request.POST.get('dosage')
+            prescription.instructions = request.POST.get('instructions')
+            prescription.save()
+            
+            # Logger la modification
+            AuditLog.objects.create(
+                user=request.user,
+                action='UPDATE',
+                model='Prescription',
+                object_id=prescription.id,
+                details=f"Prescription modifiée pour {prescription.patient.get_full_name()}: {old_medication} -> {prescription.medication}",
+                ip_address=get_client_ip(request)
+            )
+            
+            # Mettre à jour le dossier patient
+            record = PatientRecord.objects.get(patient=prescription.patient)
+            # Remplacer l'ancienne médication par la nouvelle dans l'historique
+            if old_medication in record.current_medications:
+                record.current_medications = record.current_medications.replace(
+                    f"{old_medication} ({old_dosage})",
+                    f"{prescription.medication} ({prescription.dosage})"
+                )
+                record.save()
+            
+            messages.success(request, "Prescription modifiée avec succès!")
+            return redirect('view_prescriptions')
+            
+        except Exception as e:
+            messages.error(request, f"Erreur lors de la modification: {str(e)}")
+    
+    # Récupérer la liste des patients et médicaments pour le formulaire
+    patients = CustomUser.objects.filter(role='PATIENT')
+    medications = ['Paracétamol', 'Ibuprofène', 'Amoxicilline', 'Aspirine', 'Doliprane', 'Advil']
+    
+    context = {
+        'prescription': prescription,
+        'patients': patients,
+        'medications': medications
+    }
+    
+    return render(request, 'accounts/doctor/edit_prescription.html', context)
+
+@login_required
+@role_required('DOCTOR')
+def delete_prescription(request, prescription_id):
+    """Vue pour supprimer une prescription"""
+    prescription = get_object_or_404(Prescription, id=prescription_id)
+    
+    # Vérifier que le médecin peut supprimer cette prescription
+    if prescription.doctor != request.user:
+        messages.error(request, "Vous ne pouvez supprimer que vos propres prescriptions.")
+        return redirect('view_prescriptions')
+    
+    if request.method == 'POST':
+        # Logger la suppression
+        AuditLog.objects.create(
+            user=request.user,
+            action='DELETE',
+            model='Prescription',
+            object_id=prescription.id,
+            details=f"Prescription supprimée pour {prescription.patient.get_full_name()}: {prescription.medication}",
+            ip_address=get_client_ip(request)
+        )
+        
+        # Retirer la médication du dossier patient
+        try:
+            record = PatientRecord.objects.get(patient=prescription.patient)
+            medication_entry = f"{prescription.medication} ({prescription.dosage})"
+            if medication_entry in record.current_medications:
+                record.current_medications = record.current_medications.replace(
+                    f"\n{medication_entry}", ""
+                ).replace(medication_entry, "")
+                record.save()
+        except PatientRecord.DoesNotExist:
+            pass
+        
+        prescription.delete()
+        messages.success(request, "Prescription supprimée avec succès!")
+        return redirect('view_prescriptions')
+    
+    return render(request, 'accounts/doctor/confirm_delete_prescription.html', {
+        'prescription': prescription
+    })
+
+# Ajoutez ces vues dans votre fichier views.py
+
+@login_required
+@role_required('DOCTOR')
+def view_exam_detail(request, exam_id):
+    """Vue pour voir les détails d'un examen médical"""
+    exam = get_object_or_404(MedicalExam, id=exam_id)
+    
+    # Vérifier que le médecin peut accéder à cet examen
+    if exam.requested_by != request.user:
+        messages.error(request, "Vous n'avez pas accès à cet examen.")
+        return redirect('view_exam_results')
+    
+    # Logger l'accès à l'examen
+    AuditLog.objects.create(
+        user=request.user,
+        action='VIEW',
+        model='MedicalExam',
+        object_id=exam.id,
+        details=f"Consultation détail examen {exam.get_exam_type_display()} pour {exam.patient.get_full_name()}",
+        ip_address=get_client_ip(request)
+    )
+    
+    context = {
+        'exam': exam,
+        'patient': exam.patient,
+    }
+    
+    return render(request, 'accounts/doctor/view_exam_detail.html', context)
+
+@login_required
+@role_required('DOCTOR')
+def edit_exam(request, exam_id):
+    """Vue pour modifier un examen médical"""
+    exam = get_object_or_404(MedicalExam, id=exam_id)
+    
+    # Vérifier que le médecin peut modifier cet examen
+    if exam.requested_by != request.user:
+        messages.error(request, "Vous ne pouvez modifier que vos propres demandes d'examen.")
+        return redirect('view_exam_results')
+    
+    if request.method == 'POST':
+        try:
+            # Sauvegarder les anciennes valeurs pour l'audit
+            old_exam_type = exam.exam_type
+            old_notes = exam.notes
+            
+            # Modifier l'examen
+            exam.exam_type = request.POST.get('exam_type')
+            exam.notes = request.POST.get('notes')
+            
+            # Si des résultats sont fournis, les ajouter
+            if request.POST.get('results'):
+                exam.results = request.POST.get('results')
+                exam.status = 'COMPLETED'
+                exam.completed_at = timezone.now()
+            
+            exam.save()
+            
+            # Logger la modification
+            AuditLog.objects.create(
+                user=request.user,
+                action='UPDATE',
+                model='MedicalExam',
+                object_id=exam.id,
+                details=f"Examen modifié pour {exam.patient.get_full_name()}: {old_exam_type} -> {exam.exam_type}",
+                ip_address=get_client_ip(request)
+            )
+            
+            messages.success(request, "Examen modifié avec succès!")
+            return redirect('view_exam_results')
+            
+        except Exception as e:
+            messages.error(request, f"Erreur lors de la modification: {str(e)}")
+    
+    patients = CustomUser.objects.filter(role='PATIENT')
+    
+    context = {
+        'exam': exam,
+        'patients': patients,
+        'exam_types': MedicalExam.EXAM_TYPES
+    }
+    
+    return render(request, 'accounts/doctor/edit_exam.html', context)
+
+@login_required
+@role_required('DOCTOR')
+def delete_exam(request, exam_id):
+    """Vue pour supprimer une demande d'examen"""
+    exam = get_object_or_404(MedicalExam, id=exam_id)
+    
+    # Vérifier que le médecin peut supprimer cet examen
+    if exam.requested_by != request.user:
+        messages.error(request, "Vous ne pouvez supprimer que vos propres demandes d'examen.")
+        return redirect('view_exam_results')
+    
+    if request.method == 'POST':
+        # Logger la suppression
+        AuditLog.objects.create(
+            user=request.user,
+            action='DELETE',
+            model='MedicalExam',
+            object_id=exam.id,
+            details=f"Demande d'examen supprimée pour {exam.patient.get_full_name()}: {exam.get_exam_type_display()}",
+            ip_address=get_client_ip(request)
+        )
+        
+        exam.delete()
+        messages.success(request, "Demande d'examen supprimée avec succès!")
+        return redirect('view_exam_results')
+    
+    return render(request, 'accounts/doctor/confirm_delete_exam.html', {
+        'exam': exam
+    })
+
+@login_required
+@role_required('DOCTOR')
+def add_exam_results(request, exam_id):
+    """Vue pour ajouter les résultats d'un examen"""
+    exam = get_object_or_404(MedicalExam, id=exam_id)
+    
+    # Vérifier que le médecin peut modifier cet examen
+    if exam.requested_by != request.user:
+        messages.error(request, "Vous n'avez pas accès à cet examen.")
+        return redirect('view_exam_results')
+    
+    if request.method == 'POST':
+        try:
+            exam.results = request.POST.get('results')
+            exam.status = 'COMPLETED'
+            exam.completed_at = timezone.now()
+            exam.save()
+            
+            # Mettre à jour l'historique médical du patient
+            record, created = PatientRecord.objects.get_or_create(patient=exam.patient)
+            record.medical_history += f"\n{exam.get_exam_type_display()} - {timezone.now().strftime('%d/%m/%Y')}: {exam.results}"
+            record.save()
+            
+            # Logger l'ajout des résultats
+            AuditLog.objects.create(
+                user=request.user,
+                action='UPDATE',
+                model='MedicalExam',
+                object_id=exam.id,
+                details=f"Résultats ajoutés pour l'examen {exam.get_exam_type_display()} de {exam.patient.get_full_name()}",
+                ip_address=get_client_ip(request)
+            )
+            
+            messages.success(request, "Résultats de l'examen ajoutés avec succès!")
+            return redirect('view_exam_results')
+            
+        except Exception as e:
+            messages.error(request, f"Erreur: {str(e)}")
+    
+    return render(request, 'accounts/doctor/add_exam_results.html', {
+        'exam': exam
+    })
+
 # =============================================
 # VUES INFIRMIERS
 # =============================================
 
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.utils import timezone
+from datetime import datetime, timedelta
+from .models import CustomUser, PatientRecord, Prescription, MedicalExam, AuditLog, Appointment
+from .decorators import role_required
+
+def get_client_ip(request):
+    """Helper function to get client IP address"""
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        ip = x_forwarded_for.split(',')[0]
+    else:
+        ip = request.META.get('REMOTE_ADDR')
+    return ip
+
 @login_required
 @role_required('NURSE')
 def record_care(request):
+    patients = CustomUser.objects.filter(role='PATIENT')
+    
     if request.method == 'POST':
         try:
             patient_id = request.POST.get('patient_id')
             patient = get_object_or_404(CustomUser, id=patient_id, role='PATIENT')
             
+            care_type = request.POST.get('care_type')
+            care_time = request.POST.get('care_time')
+            care_description = request.POST.get('care_description')
+            observations = request.POST.get('observations')
+            pain_level = request.POST.get('pain_level')
+            medication_given = request.POST.get('medication_given')
+            
             record = PatientRecord.objects.get(patient=patient)
-            record.medical_history += f"\n\nSoins du {timezone.now().strftime('%d/%m/%Y')}:\n"
-            record.medical_history += request.POST.get('care_details')
+            record.medical_history += f"\n\nSoins du {timezone.now().strftime('%d/%m/%Y %H:%M')}:\n"
+            record.medical_history += f"Type: {care_type}\n"
+            record.medical_history += f"Description: {care_description}\n"
+            record.medical_history += f"Observations: {observations}\n"
+            record.medical_history += f"Niveau de douleur: {pain_level}/10\n"
+            if medication_given:
+                record.medical_history += f"Médicament administré: {medication_given}\n"
             record.save()
             
             AuditLog.objects.create(
@@ -559,68 +935,100 @@ def record_care(request):
             )
             
             messages.success(request, "Soins enregistrés avec succès!")
-            return redirect('view_patient_vitals')
+            return redirect('view_patient_vitals', patient_id=patient.id)
             
         except Exception as e:
             messages.error(request, f"Erreur: {str(e)}")
     
-    patients = CustomUser.objects.filter(role='PATIENT')
     return render(request, 'accounts/nurse/record_care.html', {
         'patients': patients
     })
 
 @login_required
 @role_required('NURSE')
-def view_patient_vitals(request):
-    records = PatientRecord.objects.select_related('patient').all()
-    return render(request, 'accounts/nurse/view_patient_vitals.html', {
-        'records': records
-    })
-
-@login_required
-@role_required('NURSE')
-def administer_medication(request):
-    if request.method == 'POST':
-        try:
-            prescription_id = request.POST.get('prescription_id')
-            prescription = get_object_or_404(Prescription, id=prescription_id)
-            
-            prescription.instructions += f"\n\nAdministré le {timezone.now().strftime('%d/%m/%Y %H:%M')} par {request.user.get_full_name()}"
-            prescription.save()
-            
-            AuditLog.objects.create(
-                user=request.user,
-                action='UPDATE',
-                model='Prescription',
-                object_id=prescription.id,
-                details=f"Médicament administré à {prescription.patient.get_full_name()}",
-                ip_address=get_client_ip(request)
-            )
-            
-            messages.success(request, "Médicament administré avec succès!")
-            return redirect('view_patient_vitals')
-            
-        except Exception as e:
-            messages.error(request, f"Erreur: {str(e)}")
+def view_patient_vitals(request, patient_id=None):
+    if patient_id is None:
+        patients = CustomUser.objects.filter(role='PATIENT')
+        return render(request, 'accounts/nurse/select_patient.html', {'patients': patients})
     
-    prescriptions = Prescription.objects.filter(is_dispensed=True).select_related('patient')
-    return render(request, 'accounts/nurse/administer_medication.html', {
-        'prescriptions': prescriptions
+    patient = get_object_or_404(CustomUser, id=patient_id, role='PATIENT')
+    record = get_object_or_404(PatientRecord, patient=patient)
+    
+    # Extraire les dernières constantes vitales de l'historique médical
+    last_vitals = {
+        'temperature': None,
+        'heart_rate': None,
+        'systolic': None,
+        'diastolic': None,
+        'oxygen': None,
+        'time': None
+    }
+    
+    # Analyse simplifiée de l'historique pour trouver les dernières constantes
+    history_lines = record.medical_history.split('\n')
+    for line in reversed(history_lines):
+        if 'TA:' in line:
+            parts = line.split(',')
+            for part in parts:
+                if 'TA:' in part:
+                    try:
+                        bp_values = part.split('TA:')[1].strip().split('/')
+                        if len(bp_values) == 2:
+                            last_vitals['systolic'], last_vitals['diastolic'] = bp_values
+                    except (IndexError, ValueError):
+                        pass
+                elif 'Temp:' in part:
+                    try:
+                        last_vitals['temperature'] = part.split('Temp:')[1].strip().split('°')[0]
+                    except (IndexError, ValueError):
+                        pass
+                elif 'Pouls:' in part:
+                    try:
+                        last_vitals['heart_rate'] = part.split('Pouls:')[1].strip().split(' ')[0]
+                    except (IndexError, ValueError):
+                        pass
+                elif 'O₂:' in part:
+                    try:
+                        last_vitals['oxygen'] = part.split('O₂:')[1].strip().split('%')[0]
+                    except (IndexError, ValueError):
+                        pass
+                elif 'Constantes du' in part:
+                    try:
+                        last_vitals['time'] = part.split('Constantes du')[1].strip()
+                    except (IndexError, ValueError):
+                        pass
+            break  # Stop after finding the first (most recent) vitals entry
+    
+    return render(request, 'accounts/nurse/view_patient_vitals.html', {
+        'patient': patient,
+        'record': record,
+        'last_vitals': last_vitals
     })
 
 @login_required
 @role_required('NURSE')
-def quick_vitals(request):
+def quick_vitals(request, patient_id):
+    patient = get_object_or_404(CustomUser, id=patient_id, role='PATIENT')
+    
     if request.method == 'POST':
         try:
-            patient_id = request.POST.get('patient_id')
-            patient = get_object_or_404(CustomUser, id=patient_id, role='PATIENT')
+            temperature = request.POST.get('temperature')
+            heart_rate = request.POST.get('heart_rate')
+            systolic = request.POST.get('systolic')
+            diastolic = request.POST.get('diastolic')
+            oxygen = request.POST.get('oxygen')
+            respiratory_rate = request.POST.get('respiratory_rate')
+            notes = request.POST.get('notes')
             
             record = PatientRecord.objects.get(patient=patient)
             record.medical_history += f"\n\nConstantes du {timezone.now().strftime('%d/%m/%Y %H:%M')}:\n"
-            record.medical_history += f"TA: {request.POST.get('blood_pressure')}, "
-            record.medical_history += f"Temp: {request.POST.get('temperature')}°C, "
-            record.medical_history += f"Pouls: {request.POST.get('pulse')} bpm"
+            record.medical_history += f"TA: {systolic}/{diastolic}, "
+            record.medical_history += f"Temp: {temperature}°C, "
+            record.medical_history += f"Pouls: {heart_rate} bpm, "
+            record.medical_history += f"O₂: {oxygen}%, "
+            record.medical_history += f"FR: {respiratory_rate}/min"
+            if notes:
+                record.medical_history += f"\nNotes: {notes}"
             record.save()
             
             AuditLog.objects.create(
@@ -633,14 +1041,64 @@ def quick_vitals(request):
             )
             
             messages.success(request, "Constantes enregistrées!")
-            return redirect('view_patient_vitals')
+            return redirect('view_patient_vitals', patient_id=patient.id)
             
         except Exception as e:
             messages.error(request, f"Erreur: {str(e)}")
     
-    patients = CustomUser.objects.filter(role='PATIENT')
     return render(request, 'accounts/nurse/quick_vitals.html', {
-        'patients': patients
+        'patient': patient
+    })
+
+@login_required
+@role_required('NURSE')
+def administer_medication(request, patient_id=None):  # AJOUT DU PARAMETRE patient_id=None
+    # Récupérer patient_id depuis l'URL ou les paramètres GET
+    if not patient_id:
+        patient_id = request.GET.get('patient_id')
+    
+    patients = CustomUser.objects.filter(role='PATIENT')
+    
+    # Si aucun patient_id et qu'il y a des patients, rediriger vers le premier
+    if not patient_id and patients.exists():
+        return redirect('administer_medication', patient_id=patients.first().id)
+    
+    patient = get_object_or_404(CustomUser, id=patient_id, role='PATIENT') if patient_id else None
+    prescriptions = Prescription.objects.filter(patient=patient, is_dispensed=True) if patient else []
+    
+    if request.method == 'POST':
+        try:
+            prescription_id = request.POST.get('prescription_id')
+            prescription = get_object_or_404(Prescription, id=prescription_id)
+            
+            prescription.instructions += f"\n\nAdministré le {timezone.now().strftime('%d/%m/%Y %H:%M')} par {request.user.get_full_name()}"
+            prescription.is_administered = True
+            prescription.administered_at = timezone.now()
+            prescription.save()
+            
+            record = PatientRecord.objects.get(patient=prescription.patient)
+            record.medical_history += f"\nMédicament administré: {prescription.medication} ({prescription.dosage}) à {timezone.now().strftime('%H:%M')}"
+            record.save()
+            
+            AuditLog.objects.create(
+                user=request.user,
+                action='UPDATE',
+                model='Prescription',
+                object_id=prescription.id,
+                details=f"Médicament administré à {prescription.patient.get_full_name()}",
+                ip_address=get_client_ip(request)
+            )
+            
+            messages.success(request, "Médicament administré avec succès!")
+            return redirect('administer_medication', patient_id=prescription.patient.id)
+            
+        except Exception as e:
+            messages.error(request, f"Erreur: {str(e)}")
+    
+    return render(request, 'accounts/nurse/administer_medication.html', {
+        'patients': patients,
+        'patient': patient,
+        'prescriptions': prescriptions
     })
 
 @login_required
@@ -650,6 +1108,19 @@ def medication_administration(request):
     return render(request, 'accounts/nurse/medication_administration.html', {
         'prescriptions': prescriptions
     })
+def select_patient_for_vitals(request):
+    """Vue pour sélectionner un patient avant de saisir les constantes vitales"""
+    if not request.user.is_authenticated or request.user.role != 'NURSE':
+        return redirect('login')
+    
+    # Récupérer tous les utilisateurs ayant le rôle PATIENT
+    patients = CustomUser.objects.filter(role='PATIENT').order_by('last_name', 'first_name')
+    
+    context = {
+        'patients': patients,
+        'title': 'Sélectionner un Patient - Constantes Vitales'
+    }
+    return render(request, 'accounts/nurse/select_patient_vitals.html', context)
 
 # =============================================
 # VUES PHARMACIENS
@@ -664,16 +1135,14 @@ def dispense_medication(request):
             prescription = get_object_or_404(Prescription, id=prescription_id)
             
             prescription.is_dispensed = True
+            prescription.dispensed_by = request.user
+            prescription.dispensed_at = timezone.now()
             prescription.save()
             
-            AuditLog.objects.create(
-                user=request.user,
-                action='UPDATE',
-                model='Prescription',
-                object_id=prescription.id,
-                details=f"Médicament délivré à {prescription.patient.get_full_name()}",
-                ip_address=get_client_ip(request)
-            )
+            # Enregistrer dans l'historique du patient
+            record = PatientRecord.objects.get(patient=prescription.patient)
+            record.medical_history += f"\nMédicament délivré: {prescription.medication} ({prescription.dosage}) le {timezone.now().strftime('%d/%m/%Y')} par {request.user.get_full_name()}"
+            record.save()
             
             messages.success(request, "Médicament délivré avec succès!")
             return redirect('view_prescriptions')
@@ -681,47 +1150,60 @@ def dispense_medication(request):
         except Exception as e:
             messages.error(request, f"Erreur: {str(e)}")
     
-    prescriptions = Prescription.objects.filter(is_dispensed=False).select_related('patient', 'doctor')
+    prescription_id = request.GET.get('prescription_id')
+    if not prescription_id:
+        return redirect('view_prescriptions')
+    
+    prescription = get_object_or_404(
+        Prescription.objects.select_related('patient', 'doctor'), 
+        id=prescription_id
+    )
+    
     return render(request, 'accounts/pharmacist/dispense_medication.html', {
-        'prescriptions': prescriptions
+        'prescription': prescription
     })
 
 @login_required
 @role_required('PHARMACIST')
 def view_inventory(request):
+    # Données simulées - à remplacer par vos données réelles
     inventory = [
-        {'name': 'Paracétamol', 'quantity': 150, 'threshold': 50},
-        {'name': 'Ibuprofène', 'quantity': 80, 'threshold': 30},
-        {'name': 'Amoxicilline', 'quantity': 45, 'threshold': 20},
+        {'id': 1, 'name': 'Paracétamol', 'code': 'PARA500', 'dosage': '500mg', 
+         'stock': 150, 'max_stock': 200, 'threshold': 50, 'supplier': 'PharmaSen'},
+        {'id': 2, 'name': 'Ibuprofène', 'code': 'IBUP200', 'dosage': '200mg', 
+         'stock': 80, 'max_stock': 150, 'threshold': 30, 'supplier': 'MediPlus'},
+        {'id': 3, 'name': 'Amoxicilline', 'code': 'AMOX500', 'dosage': '500mg', 
+         'stock': 45, 'max_stock': 100, 'threshold': 20, 'supplier': 'PharmaSen'},
     ]
-    return render(request, 'accounts/pharmacist/view_inventory.html', {
-        'inventory': inventory
-    })
+    
+    context = {
+        'inventory': inventory,
+        'total_items': len(inventory),
+        'low_stock_items': len([i for i in inventory if i['stock'] <= i['threshold'] and i['stock'] > 0]),
+        'out_of_stock_items': len([i for i in inventory if i['stock'] == 0]),
+    }
+    return render(request, 'accounts/pharmacist/view_inventory.html', context)
 
 @login_required
 @role_required('PHARMACIST')
 def request_reorder(request):
-    if request.method == 'POST':
-        try:
-            medication = request.POST.get('medication')
-            quantity = request.POST.get('quantity')
-            
-            AuditLog.objects.create(
-                user=request.user,
-                action='CREATE',
-                model='Reorder',
-                object_id=0,
-                details=f"Commande de {quantity} {medication}",
-                ip_address=get_client_ip(request)
-            )
-            
-            messages.success(request, "Commande passée avec succès!")
-            return redirect('view_inventory')
-            
-        except Exception as e:
-            messages.error(request, f"Erreur: {str(e)}")
+    # Données simulées - à remplacer par vos données réelles
+    medications = [
+        {'id': 1, 'name': 'Paracétamol', 'dosage': '500mg', 'stock': 150, 'threshold': 50, 'supplier': 'PharmaSen', 'reorder_quantity': 50},
+        {'id': 2, 'name': 'Ibuprofène', 'dosage': '200mg', 'stock': 80, 'threshold': 30, 'supplier': 'MediPlus', 'reorder_quantity': 70},
+        {'id': 3, 'name': 'Amoxicilline', 'dosage': '500mg', 'stock': 45, 'threshold': 20, 'supplier': 'PharmaSen', 'reorder_quantity': 55},
+    ]
     
-    return render(request, 'accounts/pharmacist/request_reorder.html')
+    suppliers = [
+        {'id': 1, 'name': 'PharmaSen', 'delivery_time': 3, 'shipping_cost': 5000},
+        {'id': 2, 'name': 'MediPlus', 'delivery_time': 5, 'shipping_cost': 3000},
+        {'id': 3, 'name': 'SantéAfrique', 'delivery_time': 7, 'shipping_cost': 2000},
+    ]
+    
+    return render(request, 'accounts/pharmacist/request_reorder.html', {
+        'medications': medications,
+        'suppliers': suppliers
+    })
 
 # =============================================
 # VUES ADMINISTRATEURS
@@ -865,31 +1347,35 @@ def download_medical_record(request):
 
 @login_required
 @role_required('PATIENT')
-def view_appointments(request):
-    appointments = []  # Remplacer par Appointment.objects.filter(patient=request.user)
-    return render(request, 'accounts/patient/view_appointments.html', {
-        'appointments': appointments
-    })
-
-@login_required
-@role_required('PATIENT')
 def book_appointment(request):
     if request.method == 'POST':
         try:
             doctor_id = request.POST.get('doctor_id')
             date = request.POST.get('date')
+            time = request.POST.get('time')
             reason = request.POST.get('reason')
+            custom_reason = request.POST.get('custom_reason')
+            notes = request.POST.get('notes')
             
-            AuditLog.objects.create(
-                user=request.user,
-                action='CREATE',
-                model='Appointment',
-                object_id=0,
-                details=f"Rendez-vous demandé avec le docteur {doctor_id} pour le {date}",
-                ip_address=get_client_ip(request)
+            doctor = get_object_or_404(CustomUser, id=doctor_id, role='DOCTOR')
+            
+            appointment = Appointment.objects.create(
+                patient=request.user,
+                doctor=doctor,
+                date=date,
+                time=time,
+                reason=reason,
+                custom_reason=custom_reason if reason == 'OTHER' else '',
+                notes=notes,
+                status='SCHEDULED'
             )
             
-            messages.success(request, "Rendez-vous demandé avec succès!")
+            # Mettre à jour le dossier patient
+            record = PatientRecord.objects.get(patient=request.user)
+            record.next_appointment = date
+            record.save()
+            
+            messages.success(request, "Rendez-vous confirmé avec succès!")
             return redirect('view_appointments')
             
         except Exception as e:
@@ -899,3 +1385,303 @@ def book_appointment(request):
     return render(request, 'accounts/patient/book_appointment.html', {
         'doctors': doctors
     })
+
+@login_required
+@role_required('PATIENT')
+def view_appointments(request):
+    appointments = Appointment.objects.filter(patient=request.user).order_by('date', 'time')
+    return render(request, 'accounts/patient/view_appointments.html', {
+        'appointments': appointments
+    })
+
+@login_required
+@role_required('PATIENT')
+def cancel_appointment(request, appointment_id):
+    appointment = get_object_or_404(Appointment, id=appointment_id, patient=request.user)
+    
+    if request.method == 'POST':
+        appointment.status = 'CANCELLED'
+        appointment.save()
+        messages.success(request, "Rendez-vous annulé avec succès")
+        return redirect('view_appointments')
+    
+    return render(request, 'accounts/patient/cancel_appointment.html', {
+        'appointment': appointment
+    })
+
+
+# views.py (ajouter ces fonctions)
+
+@login_required
+@role_required('PATIENT')
+def download_medical_record(request):
+    """Vue pour la page de téléchargement du dossier médical"""
+    return render(request, 'accounts/patient/download_medical_record.html')
+
+@login_required
+@role_required('PATIENT')
+def generate_pdf_record(request):
+    """Génère un PDF du dossier médical"""
+    try:
+        # Récupérer les données du patient
+        record = get_object_or_404(PatientRecord, patient=request.user)
+        prescriptions = Prescription.objects.filter(patient=request.user)
+        exams = MedicalExam.objects.filter(patient=request.user)
+        
+        # Créer le PDF
+        buffer = BytesIO()
+        p = canvas.Canvas(buffer)
+        
+        # En-tête
+        p.setFont("Helvetica-Bold", 16)
+        p.drawString(100, 800, f"Dossier médical de {request.user.get_full_name()}")
+        p.setFont("Helvetica", 12)
+        p.drawString(100, 780, f"Généré le {timezone.now().strftime('%d/%m/%Y')}")
+        
+        # Informations de base
+        p.setFont("Helvetica-Bold", 14)
+        p.drawString(100, 750, "Informations personnelles")
+        p.setFont("Helvetica", 12)
+        p.drawString(100, 730, f"Nom complet: {request.user.get_full_name()}")
+        p.drawString(100, 710, f"Téléphone: {request.user.phone_number}")
+        if record.primary_doctor:
+            p.drawString(100, 690, f"Médecin traitant: Dr. {record.primary_doctor.get_full_name()}")
+        
+        # Historique médical
+        p.setFont("Helvetica-Bold", 14)
+        p.drawString(100, 660, "Historique médical")
+        p.setFont("Helvetica", 12)
+        text = p.beginText(100, 640)
+        for line in record.medical_history.split('\n'):
+            text.textLine(line)
+        p.drawText(text)
+        
+        # Allergies
+        p.setFont("Helvetica-Bold", 14)
+        p.drawString(100, 600, "Allergies")
+        p.setFont("Helvetica", 12)
+        text = p.beginText(100, 580)
+        for line in (record.allergies or "Aucune allergie connue").split('\n'):
+            text.textLine(line)
+        p.drawText(text)
+        
+        # Traitements actuels
+        p.setFont("Helvetica-Bold", 14)
+        p.drawString(100, 540, "Traitements actuels")
+        p.setFont("Helvetica", 12)
+        text = p.beginText(100, 520)
+        for line in (record.current_medications or "Aucun traitement en cours").split('\n'):
+            text.textLine(line)
+        p.drawText(text)
+        
+        # Prescriptions
+        if prescriptions.exists():
+            p.setFont("Helvetica-Bold", 14)
+            p.drawString(100, 480, "Prescriptions")
+            y = 460
+            for prescription in prescriptions:
+                p.setFont("Helvetica-Bold", 12)
+                p.drawString(100, y, f"{prescription.medication} - {prescription.dosage}")
+                p.setFont("Helvetica", 12)
+                text = p.beginText(100, y-20)
+                for line in prescription.instructions.split('\n'):
+                    text.textLine(line)
+                p.drawText(text)
+                p.drawString(100, y-40, f"Prescrit le: {prescription.created_at.strftime('%d/%m/%Y')}")
+                p.drawString(100, y-60, f"Par: Dr. {prescription.doctor.get_full_name()}")
+                y -= 80
+                if y < 100:  # Nouvelle page si nécessaire
+                    p.showPage()
+                    y = 800
+        
+        # Examens
+        if exams.exists():
+            p.setFont("Helvetica-Bold", 14)
+            p.drawString(100, y, "Examens médicaux")
+            y -= 20
+            for exam in exams:
+                p.setFont("Helvetica-Bold", 12)
+                p.drawString(100, y, f"{exam.get_exam_type_display()} - {exam.requested_at.strftime('%d/%m/%Y')}")
+                p.setFont("Helvetica", 12)
+                if exam.notes:
+                    text = p.beginText(100, y-20)
+                    for line in exam.notes.split('\n'):
+                        text.textLine(line)
+                    p.drawText(text)
+                    y -= 40
+                if exam.results:
+                    text = p.beginText(100, y-20)
+                    for line in exam.results.split('\n'):
+                        text.textLine(line)
+                    p.drawText(text)
+                    y -= 40
+                p.drawString(100, y-20, f"Demandé par: Dr. {exam.requested_by.get_full_name()}")
+                y -= 40
+                if y < 100:  # Nouvelle page si nécessaire
+                    p.showPage()
+                    y = 800
+        
+        p.showPage()
+        p.save()
+        
+        buffer.seek(0)
+        response = HttpResponse(buffer, content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="dossier_medical_{request.user.last_name}.pdf"'
+        return response
+        
+    except Exception as e:
+        messages.error(request, f"Erreur lors de la génération du PDF: {str(e)}")
+        return redirect('view_medical_record')
+
+@login_required
+@role_required('PATIENT')
+def generate_json_record(request):
+    """Génère un fichier JSON du dossier médical"""
+    try:
+        # Récupérer les données du patient
+        record = get_object_or_404(PatientRecord, patient=request.user)
+        prescriptions = Prescription.objects.filter(patient=request.user)
+        exams = MedicalExam.objects.filter(patient=request.user)
+        
+        # Structurer les données
+        data = {
+            'patient': {
+                'full_name': request.user.get_full_name(),
+                'phone_number': request.user.phone_number,
+                'email': request.user.email,
+                'primary_doctor': record.primary_doctor.get_full_name() if record.primary_doctor else None,
+                'doctor_contact': record.primary_doctor.phone_number if record.primary_doctor else None
+            },
+            'medical_info': {
+                'blood_type': record.blood_type,
+                'allergies': record.allergies,
+                'current_medications': record.current_medications,
+                'medical_history': record.medical_history,
+                'last_consultation': record.last_consultation.strftime('%Y-%m-%d') if record.last_consultation else None,
+                'next_appointment': record.next_appointment.strftime('%Y-%m-%d') if record.next_appointment else None
+            },
+            'prescriptions': [
+                {
+                    'id': p.id,
+                    'medication': p.medication,
+                    'dosage': p.dosage,
+                    'instructions': p.instructions,
+                    'created_at': p.created_at.strftime('%Y-%m-%d'),
+                    'doctor': p.doctor.get_full_name(),
+                    'is_dispensed': p.is_dispensed,
+                    'dispensed_at': p.dispensed_at.strftime('%Y-%m-%d') if p.dispensed_at else None
+                } for p in prescriptions
+            ],
+            'exams': [
+                {
+                    'id': exam.id,
+                    'type': exam.get_exam_type_display(),
+                    'requested_at': exam.requested_at.strftime('%Y-%m-%d'),
+                    'completed_at': exam.completed_at.strftime('%Y-%m-%d') if exam.completed_at else None,
+                    'notes': exam.notes,
+                    'results': exam.results,
+                    'requested_by': exam.requested_by.get_full_name(),
+                    'status': 'completed' if exam.completed_at else 'pending'
+                } for exam in exams
+            ],
+            'generated_at': timezone.now().strftime('%Y-%m-%d %H:%M:%S'),
+            'system': {
+                'name': "Wergui+",
+                'version': "1.0"
+            }
+        }
+        
+        response = HttpResponse(json.dumps(data, indent=2, ensure_ascii=False), content_type='application/json')
+        response['Content-Disposition'] = f'attachment; filename="dossier_medical_{request.user.last_name}.json"'
+        return response
+        
+    except Exception as e:
+        messages.error(request, f"Erreur lors de la génération du JSON: {str(e)}")
+        return redirect('view_medical_record')
+
+@login_required
+@role_required('PATIENT')
+def generate_excel_record(request):
+    """Génère un fichier Excel du dossier médical"""
+    try:
+        # Récupérer les données du patient
+        record = get_object_or_404(PatientRecord, patient=request.user)
+        prescriptions = Prescription.objects.filter(patient=request.user)
+        exams = MedicalExam.objects.filter(patient=request.user)
+        
+        # Créer un nouveau classeur Excel
+        wb = openpyxl.Workbook()
+        
+        # Feuille d'informations
+        ws_info = wb.active
+        ws_info.title = "Informations"
+        ws_info.append(["Dossier médical", request.user.get_full_name()])
+        ws_info.append(["Date de génération", timezone.now().strftime('%d/%m/%Y %H:%M')])
+        ws_info.append([])
+        ws_info.append(["Informations personnelles"])
+        ws_info.append(["Nom complet", request.user.get_full_name()])
+        ws_info.append(["Téléphone", request.user.phone_number])
+        ws_info.append(["Email", request.user.email])
+        if record.primary_doctor:
+            ws_info.append(["Médecin traitant", f"Dr. {record.primary_doctor.get_full_name()}"])
+            ws_info.append(["Contact médecin", record.primary_doctor.phone_number])
+        
+        # Feuille d'informations médicales
+        ws_medical = wb.create_sheet("Informations médicales")
+        ws_medical.append(["Groupe sanguin", record.blood_type or "Non spécifié"])
+        ws_medical.append([])
+        ws_medical.append(["Allergies"])
+        for line in (record.allergies or "Aucune allergie connue").split('\n'):
+            ws_medical.append([line])
+        ws_medical.append([])
+        ws_medical.append(["Traitements actuels"])
+        for line in (record.current_medications or "Aucun traitement en cours").split('\n'):
+            ws_medical.append([line])
+        ws_medical.append([])
+        ws_medical.append(["Historique médical"])
+        for line in record.medical_history.split('\n'):
+            ws_medical.append([line])
+        ws_medical.append([])
+        ws_medical.append(["Dernière consultation", record.last_consultation.strftime('%d/%m/%Y') if record.last_consultation else "Jamais"])
+        ws_medical.append(["Prochain rendez-vous", record.next_appointment.strftime('%d/%m/%Y') if record.next_appointment else "Aucun"])
+        
+        # Feuille des prescriptions
+        if prescriptions.exists():
+            ws_prescriptions = wb.create_sheet("Prescriptions")
+            ws_prescriptions.append(["Date", "Médicament", "Posologie", "Instructions", "Prescrit par", "Statut"])
+            for p in prescriptions:
+                ws_prescriptions.append([
+                    p.created_at.strftime('%d/%m/%Y'),
+                    p.medication,
+                    p.dosage,
+                    p.instructions,
+                    f"Dr. {p.doctor.get_full_name()}",
+                    "Délivrée" if p.is_dispensed else "En attente"
+                ])
+        
+        # Feuille des examens
+        if exams.exists():
+            ws_exams = wb.create_sheet("Examens")
+            ws_exams.append(["Date demande", "Type", "Statut", "Date résultat", "Demandé par", "Notes"])
+            for exam in exams:
+                ws_exams.append([
+                    exam.requested_at.strftime('%d/%m/%Y'),
+                    exam.get_exam_type_display(),
+                    "Complété" if exam.completed_at else "En attente",
+                    exam.completed_at.strftime('%d/%m/%Y') if exam.completed_at else "",
+                    f"Dr. {exam.requested_by.get_full_name()}",
+                    exam.notes or ""
+                ])
+        
+        # Sauvegarder dans un buffer
+        buffer = BytesIO()
+        wb.save(buffer)
+        buffer.seek(0)
+        
+        response = HttpResponse(buffer, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = f'attachment; filename="dossier_medical_{request.user.last_name}.xlsx"'
+        return response
+        
+    except Exception as e:
+        messages.error(request, f"Erreur lors de la génération du fichier Excel: {str(e)}")
+        return redirect('view_medical_record')

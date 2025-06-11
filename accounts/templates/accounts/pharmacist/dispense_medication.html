@@ -1,145 +1,119 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="pharmacist-container">
-    <div class="pharmacist-header">
-        <h2><i class="fas fa-prescription-bottle-alt"></i> Délivrance de Médicaments</h2>
-        <div class="prescription-info">
-            <p>Ordonnance #{{ prescription.id }} - Dr. {{ prescription.doctor.last_name }}</p>
-        </div>
-    </div>
-
-    <div class="prescription-details">
-        <div class="patient-info">
-            <div class="patient-avatar">
-                <i class="fas fa-user-circle"></i>
-            </div>
-            <div>
-                <h3>{{ prescription.patient.get_full_name }}</h3>
-                <p><i class="fas fa-birthday-cake"></i> {{ prescription.patient.birth_date|date:"d/m/Y" }}</p>
-                <p><i class="fas fa-phone"></i> {{ prescription.patient.phone_number }}</p>
-            </div>
-        </div>
-        
-        <div class="prescription-date">
-            <p><i class="fas fa-calendar-alt"></i> Date: {{ prescription.created_at|date:"d/m/Y" }}</p>
-            <p><i class="fas fa-stamp"></i> Statut: 
-                <span class="status-badge {% if prescription.is_dispensed %}dispensed{% else %}pending{% endif %}">
-                    {% if prescription.is_dispensed %}
-                    Délivrée
-                    {% else %}
-                    En attente
-                    {% endif %}
-                </span>
+<div class="pharmacist-container" style="background: white; padding: 2rem; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
+    <div class="pharmacist-header" style="margin-bottom: 2rem; border-bottom: 1px solid #e0e0e0; padding-bottom: 1rem;">
+        <h2 style="color: var(--medical-green);">
+            <i class="fas fa-prescription-bottle-alt"></i> Délivrance de Médicaments
+        </h2>
+        <div class="prescription-info" style="background-color: var(--green-soft); padding: 1rem; border-radius: 5px;">
+            <p style="margin: 0;">
+                <strong>Ordonnance #{{ prescription.id }}</strong> - 
+                Prescrite par <strong>Dr. {{ prescription.doctor.get_full_name }}</strong>
             </p>
         </div>
     </div>
 
-    <div class="medication-list">
-        <h3><i class="fas fa-pills"></i> Médicaments Prescrits</h3>
-        
-        <table class="medication-table">
-            <thead>
-                <tr>
-                    <th>Médicament</th>
-                    <th>Dosage</th>
-                    <th>Quantité</th>
-                    <th>Disponibilité</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for item in prescription.medications.all %}
-                <tr>
-                    <td>{{ item.name }}</td>
-                    <td>{{ item.dosage }}</td>
-                    <td>{{ item.quantity }}</td>
-                    <td>
-                        <span class="stock-indicator {% if item.in_stock %}in-stock{% else %}out-of-stock{% endif %}">
-                            {% if item.in_stock %}
-                            <i class="fas fa-check"></i> En stock
-                            {% else %}
-                            <i class="fas fa-times"></i> Rupture
-                            {% endif %}
-                        </span>
-                    </td>
-                    <td>
-                        {% if item.in_stock %}
-                        <button class="btn btn-dispense" data-medication="{{ item.id }}">
-                            <i class="fas fa-check"></i> Délivrer
-                        </button>
-                        {% else %}
-                        <button class="btn btn-alternative" data-medication="{{ item.id }}">
-                            <i class="fas fa-exchange-alt"></i> Alternative
-                        </button>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-
-    <div class="dispense-actions">
-        <button class="btn btn-complete" id="completeDispense" {% if not all_in_stock %}disabled{% endif %}>
-            <i class="fas fa-check-double"></i> Valider la Délivrance Complète
-        </button>
-        <a href="{% url 'view_prescriptions' %}" class="btn btn-cancel">
-            <i class="fas fa-times"></i> Retour
-        </a>
-    </div>
-
-    <div class="alternative-modal" id="alternativeModal">
-        <div class="modal-content">
-            <h3><i class="fas fa-exchange-alt"></i> Proposer une Alternative</h3>
-            <p>Pour le médicament: <strong id="altMedName"></strong></p>
-            
-            <form id="alternativeForm" method="post">
-                {% csrf_token %}
-                <input type="hidden" name="original_medication" id="originalMedication">
-                
-                <div class="form-group">
-                    <label for="alternative_med">Médicament alternatif</label>
-                    <select id="alternative_med" name="alternative_med" required class="form-select">
-                        <option value="">Sélectionner une alternative...</option>
-                        {% for med in alternatives %}
-                        <option value="{{ med.id }}">{{ med.name }} ({{ med.dosage }}) - Stock: {{ med.stock }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label for="alternative_notes">Notes pour le médecin</label>
-                    <textarea id="alternative_notes" name="alternative_notes" class="form-textarea" required placeholder="Raison de la substitution..."></textarea>
-                </div>
-                
-                <div class="form-actions">
-                    <button type="submit" class="btn btn-confirm">
-                        <i class="fas fa-paper-plane"></i> Envoyer la Proposition
-                    </button>
-                    <button type="button" class="btn btn-cancel" id="cancelAlternative">
-                        <i class="fas fa-times"></i> Annuler
-                    </button>
-                </div>
-            </form>
+    <div class="patient-card" style="background-color: #f5f5f5; padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem;">
+        <div style="display: flex; align-items: center; gap: 1.5rem;">
+            <div style="font-size: 2.5rem; color: var(--medical-green);">
+                <i class="fas fa-user-circle"></i>
+            </div>
+            <div>
+                <h3 style="margin: 0 0 0.5rem 0; color: var(--green-dark);">{{ prescription.patient.get_full_name }}</h3>
+                <p style="margin: 0.3rem 0; color: #555;">
+                    <i class="fas fa-phone"></i> {{ prescription.patient.phone_number }}
+                </p>
+                <p style="margin: 0.3rem 0; color: #555;">
+                    <i class="fas fa-envelope"></i> {{ prescription.patient.email }}
+                </p>
+            </div>
         </div>
+    </div>
+
+    <div class="prescription-details" style="margin-bottom: 2rem;">
+        <h3 style="color: var(--green-dark); border-bottom: 1px solid #e0e0e0; padding-bottom: 0.5rem;">
+            <i class="fas fa-pills"></i> Détails de la Prescription
+        </h3>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 1rem;">
+            <div>
+                <p><strong>Médicament:</strong> {{ prescription.medication }}</p>
+                <p><strong>Dosage:</strong> {{ prescription.dosage }}</p>
+            </div>
+            <div>
+                <p><strong>Date:</strong> {{ prescription.created_at|date:"d/m/Y" }}</p>
+                <p>
+                    <strong>Statut:</strong> 
+                    <span style="display: inline-block; padding: 0.25rem 0.75rem; border-radius: 50px; 
+                          background-color: {% if prescription.is_dispensed %}var(--medical-green){% else %}#ff9800{% endif %}; 
+                          color: white;">
+                        {% if prescription.is_dispensed %}Délivrée{% else %}En attente{% endif %}
+                    </span>
+                </p>
+            </div>
+        </div>
+        
+        <div style="margin-top: 1.5rem;">
+            <h4 style="color: var(--green-dark);">Instructions:</h4>
+            <div style="background-color: #f9f9f9; padding: 1rem; border-radius: 5px; border-left: 4px solid var(--medical-green);">
+                {{ prescription.instructions|linebreaks }}
+            </div>
+        </div>
+    </div>
+
+    <div class="dispense-form">
+        <form method="post" style="background-color: #f5f5f5; padding: 1.5rem; border-radius: 8px;">
+            {% csrf_token %}
+            <input type="hidden" name="prescription_id" value="{{ prescription.id }}">
+            
+            <h3 style="color: var(--green-dark); margin-top: 0;">
+                <i class="fas fa-check-circle"></i> Confirmer la Délivrance
+            </h3>
+            
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">
+                    Quantité délivrée:
+                </label>
+                <input type="number" name="quantity" min="1" value="1" 
+                       style="padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; width: 100px;">
+            </div>
+            
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">
+                    Notes (optionnel):
+                </label>
+                <textarea name="notes" rows="3" 
+                          style="padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; width: 100%;"></textarea>
+            </div>
+            
+            <div style="display: flex; gap: 1rem;">
+                <button type="submit" 
+                        style="padding: 0.75rem 1.5rem; background-color: var(--medical-green); color: white; 
+                               border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">
+                    <i class="fas fa-check"></i> Confirmer la Délivrance
+                </button>
+                <a href="{% url 'view_prescriptions' %}" 
+                   style="padding: 0.75rem 1.5rem; background-color: #f44336; color: white; 
+                          text-decoration: none; border-radius: 4px; font-weight: bold;">
+                    <i class="fas fa-times"></i> Annuler
+                </a>
+            </div>
+        </form>
     </div>
 </div>
 
-<script>
-document.querySelectorAll('.btn-alternative').forEach(btn => {
-    btn.addEventListener('click', function() {
-        const medicationId = this.dataset.medication;
-        const medicationName = this.closest('tr').querySelector('td:first-child').textContent;
-        
-        document.getElementById('altMedName').textContent = medicationName;
-        document.getElementById('originalMedication').value = medicationId;
-        document.getElementById('alternativeModal').style.display = 'flex';
-    });
-});
-
-document.getElementById('cancelAlternative').addEventListener('click', function() {
-    document.getElementById('alternativeModal').style.display = 'none';
-});
-</script>
+<style>
+    :root {
+        --medical-green: #4CAF50;
+        --green-dark: #388E3C;
+        --green-soft: #C8E6C9;
+    }
+    
+    button[type="submit"]:hover {
+        background-color: var(--green-dark) !important;
+        transform: translateY(-2px);
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+</style>
 {% endblock %}

@@ -5,24 +5,24 @@
     <div class="pharmacist-header">
         <h2><i class="fas fa-warehouse"></i> Gestion du Stock</h2>
         <div class="inventory-stats">
-            <div class="stat-card">
-                <i class="fas fa-pills"></i>
+            <div class="stat-card" style="background-color: var(--green-light);">
+                <i class="fas fa-pills" style="color: var(--medical-green);"></i>
                 <div>
-                    <h3>{{ total_medications }}</h3>
+                    <h3>{{ total_items }}</h3>
                     <p>Médicaments</p>
                 </div>
             </div>
-            <div class="stat-card">
-                <i class="fas fa-box-open"></i>
+            <div class="stat-card" style="background-color: #FFF3E0;">
+                <i class="fas fa-exclamation-triangle" style="color: #FFA000;"></i>
                 <div>
-                    <h3>{{ low_stock_count }}</h3>
-                    <p>Stocks Critiques</p>
+                    <h3>{{ low_stock_items }}</h3>
+                    <p>Stocks Bas</p>
                 </div>
             </div>
-            <div class="stat-card">
-                <i class="fas fa-times-circle"></i>
+            <div class="stat-card" style="background-color: #FFEBEE;">
+                <i class="fas fa-times-circle" style="color: #F44336;"></i>
                 <div>
-                    <h3>{{ out_of_stock_count }}</h3>
+                    <h3>{{ out_of_stock_items }}</h3>
                     <p>Ruptures</p>
                 </div>
             </div>
@@ -30,20 +30,13 @@
     </div>
 
     <div class="inventory-controls">
-        <div class="search-bar">
+        <div class="search-control">
             <input type="text" placeholder="Rechercher un médicament..." class="search-input">
-            <button class="search-btn"><i class="fas fa-search"></i></button>
+            <button class="search-btn btn-pharmacist">
+                <i class="fas fa-search"></i> Rechercher
+            </button>
         </div>
-        <div class="filter-group">
-            <label for="stock-filter">Filtrer :</label>
-            <select id="stock-filter" class="filter-select">
-                <option value="all">Tous</option>
-                <option value="low">Stocks bas</option>
-                <option value="out">Ruptures</option>
-                <option value="expiring">Périmés bientôt</option>
-            </select>
-        </div>
-        <a href="{% url 'request_reorder' %}" class="btn btn-primary">
+        <a href="{% url 'request_reorder' %}" class="btn-pharmacist">
             <i class="fas fa-plus"></i> Nouvelle Commande
         </a>
     </div>
@@ -51,47 +44,46 @@
     <div class="inventory-table-container">
         <table class="inventory-table">
             <thead>
-                <tr>
+                <tr style="background-color: var(--medical-green); color: white;">
                     <th>Médicament</th>
+                    <th>Code</th>
                     <th>Dosage</th>
                     <th>Stock</th>
-                    <th>Seuil d'alerte</th>
-                    <th>Dernière Commande</th>
-                    <th>Date d'expiration</th>
+                    <th>Seuil Alerte</th>
+                    <th>Fournisseur</th>
                     <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
-                {% for med in medications %}
-                <tr class="{% if med.stock == 0 %}out-of-stock{% elif med.stock <= med.alert_threshold %}low-stock{% endif %}">
+                {% for item in inventory %}
+                <tr class="{% if item.stock == 0 %}out-of-stock{% elif item.stock <= item.threshold %}low-stock{% endif %}">
                     <td>
-                        <strong>{{ med.name }}</strong>
-                        <small>{{ med.code }}</small>
-                    </td>
-                    <td>{{ med.dosage }}</td>
-                    <td>
-                        <div class="stock-bar-container">
-                            <div class="stock-bar" style="width: {% widthratio med.stock med.max_stock 100 %}%"></div>
-                            <span>{{ med.stock }} unités</span>
-                        </div>
-                    </td>
-                    <td>{{ med.alert_threshold }}</td>
-                    <td>{{ med.last_order_date|date:"d/m/Y"|default:"-" }}</td>
-                    <td class="{% if med.is_expiring_soon %}expiring{% endif %}">
-                        {{ med.expiry_date|date:"d/m/Y" }}
-                        {% if med.is_expired %}
-                        <span class="expired-badge">Expiré</span>
-                        {% elif med.is_expiring_soon %}
-                        <span class="expiring-badge">Bientôt</span>
+                        <strong>{{ item.name }}</strong>
+                        {% if item.stock == 0 %}
+                        <span class="badge badge-danger">RUPTURE</span>
+                        {% elif item.stock <= item.threshold %}
+                        <span class="badge badge-warning">STOCK BAS</span>
                         {% endif %}
                     </td>
+                    <td>{{ item.code }}</td>
+                    <td>{{ item.dosage }}</td>
                     <td>
-                        <button class="btn btn-small btn-order" data-med="{{ med.id }}">
-                            <i class="fas fa-shopping-cart"></i>
-                        </button>
-                        <button class="btn btn-small btn-edit" data-med="{{ med.id }}">
+                        <div class="stock-indicator">
+                            <div class="stock-bar" style="width: {% widthratio item.stock item.max_stock 100 %}%; 
+                                 background-color: {% if item.stock == 0 %}#F44336{% elif item.stock <= item.threshold %}#FFA000{% else %}var(--medical-green){% endif %};">
+                            </div>
+                            <span>{{ item.stock }} / {{ item.max_stock }}</span>
+                        </div>
+                    </td>
+                    <td>{{ item.threshold }}</td>
+                    <td>{{ item.supplier }}</td>
+                    <td>
+                        <a href="#" class="btn-action btn-edit" title="Modifier">
                             <i class="fas fa-edit"></i>
-                        </button>
+                        </a>
+                        <a href="{% url 'request_reorder' %}?med_id={{ item.id }}" class="btn-action btn-order" title="Commander">
+                            <i class="fas fa-shopping-cart"></i>
+                        </a>
                     </td>
                 </tr>
                 {% endfor %}
@@ -100,21 +92,204 @@
     </div>
 
     <div class="pagination">
-        <span class="step-links">
-            {% if medications.has_previous %}
-                <a href="?page=1" class="page-link">&laquo; Première</a>
-                <a href="?page={{ medications.previous_page_number }}" class="page-link">Précédente</a>
-            {% endif %}
+        {% if inventory.has_previous %}
+        <a href="?page=1" class="btn-pharmacist-outline">&laquo; Première</a>
+        <a href="?page={{ inventory.previous_page_number }}" class="btn-pharmacist-outline">Précédent</a>
+        {% endif %}
 
-            <span class="current">
-                Page {{ medications.number }} sur {{ medications.paginator.num_pages }}
-            </span>
-
-            {% if medications.has_next %}
-                <a href="?page={{ medications.next_page_number }}" class="page-link">Suivante</a>
-                <a href="?page={{ medications.paginator.num_pages }}" class="page-link">Dernière &raquo;</a>
-            {% endif %}
+        <span class="current-page">
+            Page {{ inventory.number }} sur {{ inventory.paginator.num_pages }}
         </span>
+
+        {% if inventory.has_next %}
+        <a href="?page={{ inventory.next_page_number }}" class="btn-pharmacist-outline">Suivant</a>
+        <a href="?page={{ inventory.paginator.num_pages }}" class="btn-pharmacist-outline">Dernière &raquo;</a>
+        {% endif %}
     </div>
 </div>
+
+<style>
+    .pharmacist-container {
+        background: white;
+        padding: 2rem;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    .pharmacist-header {
+        margin-bottom: 2rem;
+        border-bottom: 1px solid #e0e0e0;
+        padding-bottom: 1rem;
+    }
+
+    .pharmacist-header h2 {
+        color: var(--medical-green);
+        margin: 0 0 1rem 0;
+    }
+
+    .inventory-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        padding: 1.5rem;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .stat-card i {
+        font-size: 2rem;
+    }
+
+    .stat-card h3 {
+        margin: 0;
+        font-size: 1.8rem;
+    }
+
+    .stat-card p {
+        margin: 0;
+        color: #555;
+    }
+
+    .inventory-controls {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .search-control {
+        display: flex;
+        gap: 0.5rem;
+        flex-grow: 1;
+    }
+
+    .search-input {
+        padding: 0.75rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        flex-grow: 1;
+    }
+
+    .inventory-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .inventory-table th {
+        padding: 12px 15px;
+        text-align: left;
+    }
+
+    .inventory-table td {
+        padding: 12px 15px;
+        border-bottom: 1px solid #e0e0e0;
+    }
+
+    .stock-indicator {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .stock-bar {
+        height: 8px;
+        border-radius: 4px;
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 0.25em 0.4em;
+        font-size: 0.75em;
+        font-weight: 700;
+        line-height: 1;
+        text-align: center;
+        white-space: nowrap;
+        vertical-align: baseline;
+        border-radius: 0.25rem;
+    }
+
+    .badge-danger {
+        color: #fff;
+        background-color: #F44336;
+    }
+
+    .badge-warning {
+        color: #212529;
+        background-color: #FFC107;
+    }
+
+    .btn-action {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        color: white;
+        text-decoration: none;
+        margin: 0 2px;
+    }
+
+    .btn-edit {
+        background-color: var(--medical-green);
+    }
+
+    .btn-order {
+        background-color: #2196F3;
+    }
+
+    .btn-action:hover {
+        opacity: 0.9;
+        transform: translateY(-1px);
+    }
+
+    .pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-top: 2rem;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .btn-pharmacist-outline {
+        padding: 0.5rem 1rem;
+        border: 1px solid var(--medical-green);
+        color: var(--medical-green);
+        border-radius: 4px;
+        text-decoration: none;
+        transition: all 0.3s;
+    }
+
+    .btn-pharmacist-outline:hover {
+        background-color: var(--medical-green);
+        color: white;
+    }
+
+    .current-page {
+        padding: 0 1rem;
+    }
+
+    @media (max-width: 768px) {
+        .inventory-controls {
+            flex-direction: column;
+        }
+        
+        .search-control {
+            width: 100%;
+        }
+        
+        .inventory-table {
+            display: block;
+            overflow-x: auto;
+        }
+    }
+</style>
 {% endblock %}

@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="doctor-container" style="background: white; padding: 2rem; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); max-width: 800px; margin: 0 auto;">
+    <div class="doctor-header" style="margin-bottom: 2rem; border-bottom: 1px solid #e0e0e0; padding-bottom: 1rem;">
+        <h2 style="color: var(--medical-green);">
+            <i class="fas fa-microscope"></i> Détails de l'Examen
+        </h2>
+        <p style="color: #666;">Patient: {{ patient.get_full_name }}</p>
+    </div>
+
+    <div class="exam-info" style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
+        <div class="info-card" style="background-color: var(--green-light); padding: 1.5rem; border-radius: 8px;">
+            <h3 style="color: var(--green-dark); margin-top: 0;">
+                <i class="fas fa-info-circle"></i> Informations
+            </h3>
+            <p><strong>Type:</strong> {{ exam.get_exam_type_display }}</p>
+            <p><strong>Statut:</strong> 
+                <span class="status-badge" style="display: inline-block; padding: 0.25rem 0.75rem; border-radius: 50px; background-color: {% if exam.completed_at %}#4CAF50{% else %}#FF9800{% endif %}; color: white;">
+                    {% if exam.completed_at %}Complété{% else %}En attente{% endif %}
+                </span>
+            </p>
+            <p><strong>Demandé le:</strong> {{ exam.requested_at|date:"d/m/Y H:i" }}</p>
+            {% if exam.completed_at %}
+            <p><strong>Complété le:</strong> {{ exam.completed_at|date:"d/m/Y H:i" }}</p>
+            {% endif %}
+        </div>
+
+        <div class="patient-card" style="background-color: var(--green-light); padding: 1.5rem; border-radius: 8px;">
+            <h3 style="color: var(--green-dark); margin-top: 0;">
+                <i class="fas fa-user"></i> Patient
+            </h3>
+            <p><strong>Nom:</strong> {{ patient.get_full_name }}</p>
+            <p><strong>Date de naissance:</strong> {{ patient.birth_date|date:"d/m/Y"|default:"Non spécifié" }}</p>
+            <p><strong>Téléphone:</strong> {{ patient.phone_number }}</p>
+        </div>
+    </div>
+
+    <div class="exam-details" style="margin-bottom: 2rem;">
+        <h3 style="color: var(--green-dark); border-bottom: 1px solid #e0e0e0; padding-bottom: 0.5rem;">
+            <i class="fas fa-clipboard"></i> Notes
+        </h3>
+        <div style="background-color: #f9f9f9; padding: 1.5rem; border-radius: 8px; border-left: 4px solid var(--medical-green);">
+            {{ exam.notes|linebreaks|default:"Aucune note" }}
+        </div>
+    </div>
+
+    {% if exam.results %}
+    <div class="exam-results" style="margin-bottom: 2rem;">
+        <h3 style="color: var(--green-dark); border-bottom: 1px solid #e0e0e0; padding-bottom: 0.5rem;">
+            <i class="fas fa-file-medical"></i> Résultats
+        </h3>
+        <div style="background-color: #f9f9f9; padding: 1.5rem; border-radius: 8px; border-left: 4px solid var(--medical-green);">
+            {{ exam.results|linebreaks }}
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="exam-actions" style="display: flex; gap: 1rem; margin-top: 2rem;">
+        {% if not exam.completed_at %}
+        <a href="{% url 'add_exam_results' exam.id %}" class="btn-pharmacist">
+            <i class="fas fa-plus-circle"></i> Ajouter Résultats
+        </a>
+        {% endif %}
+        <a href="{% url 'edit_exam' exam.id %}" class="btn-pharmacist-outline">
+            <i class="fas fa-edit"></i> Modifier
+        </a>
+        <a href="{% url 'view_exam_results' %}" class="btn-pharmacist-outline">
+            <i class="fas fa-arrow-left"></i> Retour
+        </a>
+    </div>
+</div>
+{% endblock %}

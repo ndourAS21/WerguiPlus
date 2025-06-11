@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="doctor-container" style="background: white; padding: 2rem; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); max-width: 800px; margin: 0 auto;">
+    <div class="doctor-header" style="margin-bottom: 2rem; border-bottom: 1px solid #e0e0e0; padding-bottom: 1rem;">
+        <h2 style="color: var(--medical-green);">
+            <i class="fas fa-edit"></i> Modifier une Ordonnance
+        </h2>
+        <p style="color: #666;">Patient: {{ prescription.patient.get_full_name }}</p>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+            <label for="patient" style="display: block; margin-bottom: 0.5rem; font-weight: bold;">
+                <i class="fas fa-user"></i> Patient
+            </label>
+            <select id="patient" name="patient_id" class="form-select" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px;" required>
+                {% for patient in patients %}
+                <option value="{{ patient.id }}" {% if patient == prescription.patient %}selected{% endif %}>
+                    {{ patient.get_full_name }} ({{ patient.phone_number }})
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+            <label for="medication" style="display: block; margin-bottom: 0.5rem; font-weight: bold;">
+                <i class="fas fa-pills"></i> Médicament
+            </label>
+            <select id="medication" name="medication" class="form-select" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px;" required>
+                {% for med in medications %}
+                <option value="{{ med }}" {% if med == prescription.medication %}selected{% endif %}>{{ med }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+            <label for="dosage" style="display: block; margin-bottom: 0.5rem; font-weight: bold;">
+                <i class="fas fa-prescription-bottle-alt"></i> Dosage
+            </label>
+            <input type="text" id="dosage" name="dosage" value="{{ prescription.dosage }}" 
+                   class="form-input" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px;" required>
+        </div>
+        
+        <div class="form-group" style="margin-bottom: 2rem;">
+            <label for="instructions" style="display: block; margin-bottom: 0.5rem; font-weight: bold;">
+                <i class="fas fa-comment-medical"></i> Instructions
+            </label>
+            <textarea id="instructions" name="instructions" rows="5" 
+                      class="form-textarea" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px;" required>{{ prescription.instructions }}</textarea>
+        </div>
+        
+        <div class="form-actions" style="display: flex; gap: 1rem;">
+            <button type="submit" class="btn-pharmacist">
+                <i class="fas fa-save"></i> Enregistrer
+            </button>
+            <a href="{% url 'view_prescriptions' %}" class="btn-pharmacist-outline">
+                <i class="fas fa-times"></i> Annuler
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

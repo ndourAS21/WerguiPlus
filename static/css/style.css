@@ -1496,3 +1496,267 @@ body {
         flex-direction: column;
     }
 }
+
+
+:root {
+    --medical-green: #4CAF50;
+    --green-dark: #388E3C;
+    --green-soft: #C8E6C9;
+    --green-light: #E8F5E9;
+}
+
+/* Style de base pour les boutons pharmacien */
+.btn-pharmacist {
+    background-color: var(--medical-green);
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+}
+
+.btn-pharmacist:hover {
+    background-color: var(--green-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    color: white;
+}
+
+.btn-pharmacist:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* Style pour les cartes de statistiques */
+.stat-card {
+    padding: 1.5rem;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.stat-card i {
+    font-size: 2rem;
+}
+
+.stat-card h3 {
+    margin: 0;
+    font-size: 1.8rem;
+    color: #333;
+}
+
+.stat-card p {
+    margin: 0;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+/* Style pour les tableaux */
+.inventory-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+}
+
+.inventory-table th {
+    padding: 12px 15px;
+    text-align: left;
+    font-weight: bold;
+}
+
+.inventory-table td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+/* Style pour les lignes avec stock critique */
+.low-stock {
+    background-color: #FFF3E0;
+}
+
+.out-of-stock {
+    background-color: #FFEBEE;
+}
+
+/* Style pour la barre de progression du stock */
+.stock-bar-container {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.stock-bar {
+    height: 8px;
+    border-radius: 4px;
+    background-color: var(--medical-green);
+}
+
+/* Style pour les étapes de commande */
+.order-steps {
+    display: flex;
+    justify-content: space-between;
+    margin: 2rem 0;
+    position: relative;
+}
+
+.order-steps::before {
+    content: '';
+    position: absolute;
+    top: 15px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background-color: #e0e0e0;
+    z-index: 1;
+}
+
+.step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    z-index: 2;
+}
+
+.step-number {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background-color: #e0e0e0;
+    color: #666;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+.step.active .step-number {
+    background-color: var(--medical-green);
+    color: white;
+}
+
+.step-label {
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.step.active .step-label {
+    color: var(--medical-green);
+    font-weight: bold;
+}
+
+
+:root {
+    --medical-green: #4CAF50;
+    --green-dark: #388E3C;
+    --green-soft: #C8E6C9;
+    --green-light: #E8F5E9;
+}
+
+.pharmacist-container {
+    background: white;
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    margin: 1rem;
+}
+
+.pharmacist-header {
+    margin-bottom: 2rem;
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 1rem;
+}
+
+.pharmacist-header h2 {
+    color: var(--medical-green);
+    margin: 0;
+}
+
+.btn-pharmacist {
+    background-color: var(--medical-green);
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    text-decoration: none;
+    display: inline-block;
+    transition: all 0.3s ease;
+}
+
+.btn-pharmacist:hover {
+    background-color: var(--green-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    color: white;
+}
+
+/* Style pour les badges de statut */
+.status-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 50px;
+    font-size: 0.85rem;
+    font-weight: bold;
+}
+
+/* Style pour les cartes d'information */
+.info-card {
+    background-color: var(--green-light);
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    border-left: 4px solid var(--medical-green);
+}
+
+/* Style pour les boutons spécifiques */
+.btn-delete {
+    padding: 0.75rem 1.5rem;
+    background-color: #F44336;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s;
+}
+
+.btn-delete:hover {
+    background-color: #D32F2F;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 5px rgba(244, 67, 54, 0.3);
+}
+
+/* Style pour les formulaires */
+.form-textarea {
+    min-height: 200px;
+    resize: vertical;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .exam-info {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .btn-pharmacist, .btn-pharmacist-outline, .btn-delete {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+}

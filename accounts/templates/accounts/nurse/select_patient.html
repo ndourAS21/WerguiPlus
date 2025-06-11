@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="nurse-container">
+    <div class="nurse-header">
+        <h2><i class="fas fa-user-injured"></i> Sélectionnez un Patient</h2>
+    </div>
+
+    <div class="patient-list">
+        {% for patient in patients %}
+        <a href="{% url 'view_patient_vitals' patient.id %}" class="patient-card">
+            <div class="patient-avatar">
+                <i class="fas fa-user-circle"></i>
+            </div>
+            <div class="patient-info">
+                <h3>{{ patient.get_full_name }}</h3>
+                <p>ID: {{ patient.id_number }}</p>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

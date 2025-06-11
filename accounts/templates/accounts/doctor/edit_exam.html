@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="doctor-container" style="background: white; padding: 2rem; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); max-width: 800px; margin: 0 auto;">
+    <div class="doctor-header" style="margin-bottom: 2rem; border-bottom: 1px solid #e0e0e0; padding-bottom: 1rem;">
+        <h2 style="color: var(--medical-green);">
+            <i class="fas fa-edit"></i> Modifier l'Examen
+        </h2>
+        <p style="color: #666;">Patient: {{ exam.patient.get_full_name }}</p>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+            <label for="patient" style="display: block; margin-bottom: 0.5rem; font-weight: bold;">
+                <i class="fas fa-user"></i> Patient
+            </label>
+            <select id="patient" name="patient_id" class="form-select" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px;" required>
+                {% for patient in patients %}
+                <option value="{{ patient.id }}" {% if patient == exam.patient %}selected{% endif %}>
+                    {{ patient.get_full_name }} ({{ patient.phone_number }})
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+            <label for="exam_type" style="display: block; margin-bottom: 0.5rem; font-weight: bold;">
+                <i class="fas fa-microscope"></i> Type d'examen
+            </label>
+            <select id="exam_type" name="exam_type" class="form-select" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px;" required>
+                {% for type, display in exam_types %}
+                <option value="{{ type }}" {% if type == exam.exam_type %}selected{% endif %}>{{ display }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+            <label for="notes" style="display: block; margin-bottom: 0.5rem; font-weight: bold;">
+                <i class="fas fa-clipboard"></i> Notes
+            </label>
+            <textarea id="notes" name="notes" rows="3" class="form-textarea" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px;">{{ exam.notes }}</textarea>
+        </div>
+        
+        {% if exam.results %}
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">
+                <i class="fas fa-file-medical"></i> Résultats existants
+            </label>
+            <div style="background-color: #f5f5f5; padding: 1rem; border-radius: 4px;">
+                {{ exam.results|linebreaks }}
+            </div>
+        </div>
+        {% endif %}
+        
+        <div class="form-actions" style="display: flex; gap: 1rem;">
+            <button type="submit" class="btn-pharmacist">
+                <i class="fas fa-save"></i> Enregistrer
+            </button>
+            <a href="{% url 'view_exam_detail' exam.id %}" class="btn-pharmacist-outline">
+                <i class="fas fa-times"></i> Annuler
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

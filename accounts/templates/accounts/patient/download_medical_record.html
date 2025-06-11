@@ -1,10 +1,10 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="patient-container">
-    <div class="patient-header">
+<div class="download-container">
+    <div class="download-header">
         <h2><i class="fas fa-file-download"></i> Télécharger mon Dossier Médical</h2>
-        <p class="subtitle">Exportez vos informations médicales au format de votre choix</p>
+        <p>Exportez vos informations médicales dans le format de votre choix</p>
     </div>
 
     <div class="download-options">
@@ -70,9 +70,9 @@
             </div>
             
             <div class="form-group">
-                <label for="include_types">Inclure :</label>
+                <label>Inclure :</label>
                 <div class="checkbox-group">
-                    <label><input type="checkbox" name="include_consultations" checked> Consultations</label>
+                    <label><input type="checkbox" name="include_history" checked> Historique médical</label>
                     <label><input type="checkbox" name="include_prescriptions" checked> Prescriptions</label>
                     <label><input type="checkbox" name="include_exams" checked> Examens</label>
                     <label><input type="checkbox" name="include_vitals" checked> Constantes vitales</label>
@@ -80,7 +80,7 @@
             </div>
             
             <div class="form-actions">
-                <button type="submit" class="btn btn-apply">
+                <button type="submit" class="btn btn-primary">
                     <i class="fas fa-sync-alt"></i> Appliquer les Filtres
                 </button>
             </div>
@@ -88,13 +88,180 @@
     </div>
 </div>
 
+<style>
+    .download-container {
+        max-width: 1000px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+    
+    .download-header {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+    
+    .download-header h2 {
+        color: #2E7D32;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+    
+    .download-header p {
+        color: #666;
+        margin-top: 0.5rem;
+    }
+    
+    .download-options {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        margin-bottom: 3rem;
+    }
+    
+    .option-card {
+        background: white;
+        border-radius: 10px;
+        padding: 2rem;
+        text-align: center;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        transition: transform 0.3s;
+    }
+    
+    .option-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .option-icon {
+        font-size: 3rem;
+        color: #2E7D32;
+        margin-bottom: 1rem;
+    }
+    
+    .option-card h3 {
+        margin: 0 0 0.5rem 0;
+        color: #333;
+    }
+    
+    .option-card p {
+        color: #666;
+        margin-bottom: 1.5rem;
+    }
+    
+    .btn-download {
+        background: #2E7D32;
+        color: white;
+        border: none;
+        padding: 0.8rem 1.5rem;
+        border-radius: 6px;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        text-decoration: none;
+        transition: all 0.3s;
+    }
+    
+    .btn-download:hover {
+        background: #1B5E20;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(46, 125, 50, 0.3);
+    }
+    
+    .download-settings {
+        background: white;
+        border-radius: 10px;
+        padding: 2rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    
+    .download-settings h3 {
+        color: #2E7D32;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 0;
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        color: #333;
+    }
+    
+    .form-select, .form-input {
+        width: 100%;
+        padding: 0.8rem;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        font-size: 1rem;
+    }
+    
+    .form-row {
+        display: flex;
+        gap: 1rem;
+    }
+    
+    .form-row .form-group {
+        flex: 1;
+    }
+    
+    .checkbox-group {
+        display: grid;
+        gap: 0.8rem;
+    }
+    
+    .checkbox-group label {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: normal;
+        cursor: pointer;
+    }
+    
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 2rem;
+    }
+    
+    .btn-primary {
+        background: #2E7D32;
+        color: white;
+        border: none;
+        padding: 0.8rem 1.5rem;
+        border-radius: 6px;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    
+    .btn-primary:hover {
+        background: #1B5E20;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(46, 125, 50, 0.3);
+    }
+</style>
+
 <script>
 document.getElementById('date_range').addEventListener('change', function() {
+    const customDates = document.getElementById('custom-dates');
     if (this.value === 'custom') {
-        document.getElementById('custom-dates').style.display = 'flex';
+        customDates.style.display = 'flex';
     } else {
-        document.getElementById('custom-dates').style.display = 'none';
+        customDates.style.display = 'none';
     }
 });
 </script>
 {% endblock %}
+[file content end]

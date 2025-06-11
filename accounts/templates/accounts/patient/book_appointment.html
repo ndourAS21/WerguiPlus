@@ -1,41 +1,47 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="patient-container">
-    <div class="patient-header">
+<div class="patient-container" style="background-color: #f5faf5; color: #2c3e50;">
+    <div class="patient-header" style="background-color: #27ae60; color: white; padding: 20px; border-radius: 8px;">
         <h2><i class="fas fa-calendar-plus"></i> Prendre un Rendez-vous</h2>
         <p class="subtitle">Sélectionnez un médecin et une disponibilité</p>
     </div>
 
-    <form method="post" class="appointment-form">
+    <form method="post" class="appointment-form" style="background-color: white; padding: 20px; border-radius: 8px; margin-top: 20px;">
         {% csrf_token %}
         
         <div class="form-section">
-            <h3><i class="fas fa-user-md"></i> Choix du Médecin</h3>
+            <h3 style="color: #27ae60;"><i class="fas fa-user-md"></i> Choix du Médecin</h3>
             <div class="form-group">
-                <label for="doctor">Médecin</label>
-                <select name="doctor" id="doctor" required class="form-select">
+                <label for="doctor_id">Médecin traitant</label>
+                <select name="doctor_id" id="doctor_id" required class="form-select">
                     <option value="">Sélectionnez un médecin...</option>
                     {% for doctor in doctors %}
-                    <option value="{{ doctor.id }}">Dr. {{ doctor.get_full_name }} - {{ doctor.specialty }}</option>
+                    <option value="{{ doctor.id }}">Dr. {{ doctor.get_full_name }} - {{ doctor.specialty|default:"Médecin généraliste" }}</option>
                     {% endfor %}
                 </select>
+                <small class="text-muted">Votre médecin traitant est : {{ request.user.patient_record.primary_doctor.get_full_name|default:"Non défini" }}</small>
             </div>
             
             <div class="form-group">
                 <label for="reason">Motif de consultation</label>
                 <select name="reason" id="reason" required class="form-select">
                     <option value="">Sélectionnez un motif...</option>
-                    <option value="consultation">Consultation générale</option>
-                    <option value="followup">Suivi de traitement</option>
-                    <option value="emergency">Urgence</option>
-                    <option value="other">Autre</option>
+                    <option value="CONSULTATION">Consultation générale</option>
+                    <option value="FOLLOWUP">Suivi de traitement</option>
+                    <option value="URGENT">Urgence</option>
+                    <option value="OTHER">Autre</option>
                 </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="custom_reason">Précisez le motif (si autre)</label>
+                <input type="text" name="custom_reason" id="custom_reason" class="form-input" placeholder="Décrivez brièvement...">
             </div>
         </div>
         
         <div class="form-section">
-            <h3><i class="fas fa-clock"></i> Date et Heure</h3>
+            <h3 style="color: #27ae60;"><i class="fas fa-clock"></i> Date et Heure</h3>
             <div class="form-row">
                 <div class="form-group">
                     <label for="date">Date</label>
@@ -43,31 +49,30 @@
                 </div>
                 <div class="form-group">
                     <label for="time">Heure</label>
-                    <input type="time" name="time" id="time" required class="form-input">
+                    <input type="time" name="time" id="time" required class="form-input" min="08:00" max="18:00">
                 </div>
             </div>
             
-            <div id="availability-calendar">
-                <!-- Calendrier des disponibilités serait chargé ici via JS -->
-                <div class="calendar-placeholder">
-                    <p>Sélectionnez un médecin pour voir ses disponibilités</p>
+            <div id="availability-calendar" style="margin-top: 20px;">
+                <div class="calendar-placeholder" style="background-color: #f8f9fa; padding: 15px; border-radius: 5px;">
+                    <p><i class="fas fa-info-circle"></i> Sélectionnez un médecin pour voir ses disponibilités</p>
                 </div>
             </div>
         </div>
         
         <div class="form-section">
-            <h3><i class="fas fa-notes-medical"></i> Informations Complémentaires</h3>
+            <h3 style="color: #27ae60;"><i class="fas fa-notes-medical"></i> Informations Complémentaires</h3>
             <div class="form-group">
                 <label for="notes">Notes (optionnel)</label>
-                <textarea name="notes" id="notes" class="form-textarea" placeholder="Décrivez brièvement votre problème..."></textarea>
+                <textarea name="notes" id="notes" class="form-textarea" rows="3" placeholder="Décrivez brièvement votre problème..."></textarea>
             </div>
         </div>
         
-        <div class="form-actions">
-            <button type="submit" class="btn btn-confirm">
+        <div class="form-actions" style="margin-top: 20px;">
+            <button type="submit" class="btn btn-confirm" style="background-color: #27ae60; color: white;">
                 <i class="fas fa-check"></i> Confirmer le Rendez-vous
             </button>
-            <a href="{% url 'view_appointments' %}" class="btn btn-cancel">
+            <a href="{% url 'view_appointments' %}" class="btn btn-cancel" style="background-color: #e74c3c; color: white;">
                 <i class="fas fa-times"></i> Annuler
             </a>
         </div>
@@ -75,26 +80,26 @@
 </div>
 
 <script>
-document.getElementById('doctor').addEventListener('change', function() {
+document.getElementById('doctor_id').addEventListener('change', function() {
     const doctorId = this.value;
     if (doctorId) {
-        // Ici, vous chargeriez les disponibilités du médecin via AJAX
         document.getElementById('availability-calendar').innerHTML = `
-            <div class="loading-spinner">
-                <i class="fas fa-spinner fa-spin"></i> Chargement des disponibilités...
+            <div class="loading-spinner" style="text-align: center; padding: 20px;">
+                <i class="fas fa-spinner fa-spin fa-2x" style="color: #27ae60;"></i>
+                <p>Chargement des disponibilités...</p>
             </div>
         `;
         
-        // Simuler un chargement
+        // Simuler un chargement AJAX
         setTimeout(() => {
             document.getElementById('availability-calendar').innerHTML = `
-                <div class="availability-slots">
-                    <h4>Disponibilités du Dr. Médecin</h4>
-                    <div class="slots-grid">
-                        <button type="button" class="slot-btn">09:00</button>
-                        <button type="button" class="slot-btn">10:30</button>
-                        <button type="button" class="slot-btn">14:00</button>
-                        <button type="button" class="slot-btn">15:15</button>
+                <div class="availability-slots" style="background-color: #f8f9fa; padding: 15px; border-radius: 5px;">
+                    <h4 style="color: #27ae60;">Disponibilités du Dr. ${document.querySelector('#doctor_id option:checked').text.split(' - ')[0]}</h4>
+                    <div class="slots-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; margin-top: 10px;">
+                        <button type="button" class="slot-btn" style="padding: 8px; background-color: #27ae60; color: white; border: none; border-radius: 4px;">09:00</button>
+                        <button type="button" class="slot-btn" style="padding: 8px; background-color: #27ae60; color: white; border: none; border-radius: 4px;">10:30</button>
+                        <button type="button" class="slot-btn" style="padding: 8px; background-color: #27ae60; color: white; border: none; border-radius: 4px;">14:00</button>
+                        <button type="button" class="slot-btn" style="padding: 8px; background-color: #27ae60; color: white; border: none; border-radius: 4px;">15:15</button>
                     </div>
                 </div>
             `;
@@ -103,11 +108,17 @@ document.getElementById('doctor').addEventListener('change', function() {
                 btn.addEventListener('click', function() {
                     const time = this.textContent;
                     document.getElementById('time').value = time;
-                    document.querySelectorAll('.slot-btn').forEach(b => b.classList.remove('active'));
-                    this.classList.add('active');
+                    document.querySelectorAll('.slot-btn').forEach(b => b.style.backgroundColor = '#27ae60');
+                    this.style.backgroundColor = '#16a085';
                 });
             });
         }, 1000);
+    } else {
+        document.getElementById('availability-calendar').innerHTML = `
+            <div class="calendar-placeholder" style="background-color: #f8f9fa; padding: 15px; border-radius: 5px;">
+                <p><i class="fas fa-info-circle"></i> Sélectionnez un médecin pour voir ses disponibilités</p>
+            </div>
+        `;
     }
 });
 </script>

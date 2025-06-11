@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="prescription-container" style="background: white; padding: 2rem; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); max-width: 800px; margin: 0 auto;">
+    <div class="prescription-header" style="text-align: center; margin-bottom: 2rem; border-bottom: 2px solid var(--medical-green); padding-bottom: 1rem;">
+        <h1 style="color: var(--medical-green); margin-bottom: 0.5rem;">
+            <i class="fas fa-prescription-bottle-alt"></i> Ordonnance Médicale
+        </h1>
+        <p style="color: #555;">Date: {{ prescription.created_at|date:"d/m/Y" }}</p>
+    </div>
+
+    <div class="prescription-body" style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
+        <div class="patient-info" style="background-color: var(--green-light); padding: 1.5rem; border-radius: 8px;">
+            <h3 style="color: var(--green-dark); margin-top: 0;">
+                <i class="fas fa-user"></i> Patient
+            </h3>
+            <p><strong>Nom:</strong> {{ patient.get_full_name }}</p>
+            <p><strong>Date de naissance:</strong> {{ patient.birth_date|date:"d/m/Y"|default:"Non spécifié" }}</p>
+            <p><strong>Téléphone:</strong> {{ patient.phone_number }}</p>
+        </div>
+
+        <div class="doctor-info" style="background-color: var(--green-light); padding: 1.5rem; border-radius: 8px;">
+            <h3 style="color: var(--green-dark); margin-top: 0;">
+                <i class="fas fa-user-md"></i> Médecin Prescripteur
+            </h3>
+            <p><strong>Nom:</strong> Dr. {{ doctor.get_full_name }}</p>
+            <p><strong>Spécialité:</strong> Médecin Généraliste</p>
+            <p><strong>Téléphone:</strong> {{ doctor.phone_number }}</p>
+        </div>
+    </div>
+
+    <div class="prescription-details" style="margin-bottom: 2rem;">
+        <h3 style="color: var(--green-dark); border-bottom: 1px solid #e0e0e0; padding-bottom: 0.5rem;">
+            <i class="fas fa-pills"></i> Prescription
+        </h3>
+        
+        <div style="background-color: #f9f9f9; padding: 1.5rem; border-radius: 8px; border-left: 4px solid var(--medical-green);">
+            <div style="margin-bottom: 1.5rem;">
+                <p style="margin-bottom: 0.5rem;"><strong>Médicament:</strong></p>
+                <p style="font-size: 1.2rem; color: var(--medical-green);">{{ prescription.medication }}</p>
+            </div>
+            
+            <div style="margin-bottom: 1.5rem;">
+                <p style="margin-bottom: 0.5rem;"><strong>Dosage:</strong></p>
+                <p>{{ prescription.dosage }}</p>
+            </div>
+            
+            <div>
+                <p style="margin-bottom: 0.5rem;"><strong>Instructions:</strong></p>
+                <p>{{ prescription.instructions|linebreaks }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="prescription-footer" style="text-align: center; margin-top: 2rem; padding-top: 1rem; border-top: 2px solid var(--medical-green);">
+        <div style="display: inline-block; padding: 1rem 2rem; background-color: var(--green-light); border-radius: 8px;">
+            <p style="margin: 0;"><strong>Validité:</strong> 1 mois à partir de la date d'émission</p>
+        </div>
+        
+        <div style="margin-top: 2rem; display: flex; justify-content: space-between; align-items: center;">
+            <div style="width: 200px; border-top: 1px solid #333; text-align: center; padding-top: 0.5rem;">
+                <p style="margin: 0;">Signature du Médecin</p>
+            </div>
+            <div style="width: 200px; border-top: 1px solid #333; text-align: center; padding-top: 0.5rem;">
+                <p style="margin: 0;">Cachet & Timbre</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="print-actions" style="margin-top: 2rem; text-align: center;">
+        <button onclick="window.print()" class="btn-pharmacist">
+            <i class="fas fa-print"></i> Imprimer
+        </button>
+        <a href="{% url 'view_prescriptions' %}" class="btn-pharmacist-outline">
+            <i class="fas fa-arrow-left"></i> Retour
+        </a>
+    </div>
+</div>
+
+<style>
+    @media print {
+        .print-actions {
+            display: none;
+        }
+        
+        body {
+            background-color: white;
+            color: black;
+        }
+        
+        .prescription-container {
+            box-shadow: none;
+            padding: 0;
+        }
+    }
+</style>
+{% endblock %}

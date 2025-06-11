@@ -9,7 +9,7 @@
             </div>
             <div class="profile-info">
                 <h2>Mon Dossier Médical</h2>
-                <p><i class="fas fa-id-card"></i> {{ request.user.id_number }}</p>
+                <p><i class="fas fa-id-card"></i> {{ request.user.get_full_name }}</p>
             </div>
         </div>
         <div class="patient-actions">
@@ -19,16 +19,17 @@
         </div>
     </div>
 
-    <div class="medical-record-tabs">
-        <button class="tab-btn active" data-tab="general">Informations Générales</button>
-        <button class="tab-btn" data-tab="history">Historique Médical</button>
-        <button class="tab-btn" data-tab="prescriptions">Prescriptions</button>
+    <div class="medical-tabs">
+        <button class="tab-btn active" data-tab="overview">Vue d'ensemble</button>
+        <button class="tab-btn" data-tab="history">Historique</button>
+        <button class="tab-btn" data-tab="prescriptions">Ordonnances</button>
         <button class="tab-btn" data-tab="exams">Examens</button>
     </div>
 
-    <div class="medical-record-content">
-        <div class="tab-pane active" id="general">
-            <div class="info-card">
+    <div class="medical-content">
+        <!-- Vue d'ensemble -->
+        <div class="tab-pane active" id="overview">
+            <div class="info-section">
                 <h3><i class="fas fa-info-circle"></i> Informations Personnelles</h3>
                 <div class="info-grid">
                     <div class="info-item">
@@ -36,95 +37,166 @@
                         <span class="info-value">{{ request.user.get_full_name }}</span>
                     </div>
                     <div class="info-item">
-                        <span class="info-label">Date de naissance :</span>
-                        <span class="info-value">{{ request.user.birth_date|date:"d/m/Y" }} ({{ age }} ans)</span>
+                        <span class="info-label">Téléphone :</span>
+                        <span class="info-value">{{ request.user.phone_number }}</span>
                     </div>
                     <div class="info-item">
-                        <span class="info-label">Groupe sanguin :</span>
-                        <span class="info-value">{{ medical_info.blood_type|default:"Non spécifié" }}</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">Allergies :</span>
-                        <span class="info-value">{{ medical_info.allergies|default:"Aucune connue" }}</span>
+                        <span class="info-label">Médecin traitant :</span>
+                        <span class="info-value">
+                            {% if record.primary_doctor %}
+                                Dr. {{ record.primary_doctor.get_full_name }}
+                            {% else %}
+                                Non spécifié
+                            {% endif %}
+                        </span>
                     </div>
                 </div>
             </div>
 
-            <div class="info-card">
+            <div class="info-section">
                 <h3><i class="fas fa-heartbeat"></i> Informations Médicales</h3>
                 <div class="info-grid">
                     <div class="info-item">
-                        <span class="info-label">Médecin traitant :</span>
-                        <span class="info-value">{{ medical_info.primary_doctor|default:"Non spécifié" }}</span>
+                        <span class="info-label">Groupe sanguin :</span>
+                        <span class="info-value">{{ record.blood_type|default:"Non spécifié" }}</span>
                     </div>
                     <div class="info-item">
+                        <span class="info-label">Allergies :</span>
+                        <span class="info-value">
+                            {% if record.allergies %}
+                                {{ record.allergies|linebreaks }}
+                            {% else %}
+                                Aucune connue
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Traitements actuels :</span>
+                        <span class="info-value">
+                            {% if record.current_medications %}
+                                {{ record.current_medications|linebreaks }}
+                            {% else %}
+                                Aucun traitement
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-section">
+                <h3><i class="fas fa-calendar-check"></i> Rendez-vous</h3>
+                <div class="info-grid">
+                    <div class="info-item">
                         <span class="info-label">Dernière consultation :</span>
-                        <span class="info-value">{{ medical_info.last_consultation|date:"d/m/Y"|default:"Jamais" }}</span>
+                        <span class="info-value">
+                            {% if record.last_consultation %}
+                                {{ record.last_consultation|date:"d/m/Y" }}
+                            {% else %}
+                                Jamais
+                            {% endif %}
+                        </span>
                     </div>
                     <div class="info-item">
                         <span class="info-label">Prochain rendez-vous :</span>
-                        <span class="info-value">{{ medical_info.next_appointment|date:"d/m/Y"|default:"Aucun" }}</span>
+                        <span class="info-value">
+                            {% if record.next_appointment %}
+                                {{ record.next_appointment|date:"d/m/Y" }}
+                            {% else %}
+                                Aucun
+                            {% endif %}
+                        </span>
                     </div>
                 </div>
             </div>
         </div>
 
+        <!-- Historique médical -->
         <div class="tab-pane" id="history">
             <div class="timeline">
-                {% for event in medical_history %}
+                {% if record.medical_history %}
                 <div class="timeline-event">
                     <div class="event-date">
-                        {{ event.date|date:"d/m/Y" }}
+                        {{ record.last_updated|date:"d/m/Y" }}
                     </div>
                     <div class="event-content">
-                        <h4>{{ event.title }}</h4>
-                        <p>{{ event.description }}</p>
-                        {% if event.doctor %}
-                        <div class="event-doctor">
-                            <i class="fas fa-user-md"></i> {{ event.doctor }}
-                        </div>
-                        {% endif %}
+                        <h4>Historique médical</h4>
+                        <p>{{ record.medical_history|linebreaks }}</p>
                     </div>
                 </div>
-                {% empty %}
+                {% endif %}
+                
+                {% for prescription in prescriptions %}
+                <div class="timeline-event">
+                    <div class="event-date">
+                        {{ prescription.created_at|date:"d/m/Y" }}
+                    </div>
+                    <div class="event-content">
+                        <h4>Nouvelle ordonnance</h4>
+                        <p>Médicament: {{ prescription.medication }}</p>
+                        <p>Posologie: {{ prescription.dosage }}</p>
+                        <div class="event-doctor">
+                            <i class="fas fa-user-md"></i> Dr. {{ prescription.doctor.get_full_name }}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+                
+                {% for exam in exams %}
+                <div class="timeline-event">
+                    <div class="event-date">
+                        {{ exam.requested_at|date:"d/m/Y" }}
+                    </div>
+                    <div class="event-content">
+                        <h4>Examen {{ exam.get_exam_type_display }}</h4>
+                        <p>Statut: {% if exam.completed_at %}Complété{% else %}En attente{% endif %}</p>
+                        {% if exam.notes %}
+                        <p>Notes: {{ exam.notes }}</p>
+                        {% endif %}
+                        <div class="event-doctor">
+                            <i class="fas fa-user-md"></i> Dr. {{ exam.requested_by.get_full_name }}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+                
+                {% if not record.medical_history and not prescriptions and not exams %}
                 <div class="empty-state">
                     <i class="fas fa-history"></i>
                     <p>Aucun historique médical enregistré</p>
                 </div>
-                {% endfor %}
+                {% endif %}
             </div>
         </div>
 
+        <!-- Prescriptions -->
         <div class="tab-pane" id="prescriptions">
             {% for prescription in prescriptions %}
             <div class="prescription-card">
                 <div class="prescription-header">
-                    <h4>Ordonnance du {{ prescription.date|date:"d/m/Y" }}</h4>
-                    <span class="prescription-status {% if prescription.is_active %}active{% else %}expired{% endif %}">
-                        {% if prescription.is_active %}
-                        <i class="fas fa-check-circle"></i> Active
+                    <h4>Ordonnance du {{ prescription.created_at|date:"d/m/Y" }}</h4>
+                    <span class="prescription-status {% if prescription.is_dispensed %}active{% else %}pending{% endif %}">
+                        {% if prescription.is_dispensed %}
+                        <i class="fas fa-check-circle"></i> Délivrée
                         {% else %}
-                        <i class="fas fa-exclamation-triangle"></i> Expirée
+                        <i class="fas fa-hourglass-half"></i> En attente
                         {% endif %}
                     </span>
                 </div>
                 <div class="prescription-doctor">
-                    <i class="fas fa-user-md"></i> {{ prescription.doctor }}
+                    <i class="fas fa-user-md"></i> Dr. {{ prescription.doctor.get_full_name }}
                 </div>
-                <div class="prescription-medications">
-                    <h5><i class="fas fa-pills"></i> Médicaments prescrits :</h5>
-                    <ul>
-                        {% for med in prescription.medications %}
-                        <li>
-                            <strong>{{ med.name }}</strong> - {{ med.dosage }}
-                            <p>{{ med.instructions }}</p>
-                        </li>
-                        {% endfor %}
-                    </ul>
+                <div class="prescription-medication">
+                    <h5><i class="fas fa-pills"></i> Médicament :</h5>
+                    <p><strong>{{ prescription.medication }}</strong> - {{ prescription.dosage }}</p>
                 </div>
-                <div class="prescription-notes">
-                    <h5><i class="fas fa-comment-medical"></i> Notes du médecin :</h5>
-                    <p>{{ prescription.notes|default:"Aucune note" }}</p>
+                <div class="prescription-instructions">
+                    <h5><i class="fas fa-comment-medical"></i> Instructions :</h5>
+                    <p>{{ prescription.instructions|linebreaks }}</p>
+                </div>
+                <div class="prescription-actions">
+                    <a href="#" class="btn btn-secondary">
+                        <i class="fas fa-print"></i> Imprimer
+                    </a>
                 </div>
             </div>
             {% empty %}
@@ -135,35 +207,42 @@
             {% endfor %}
         </div>
 
+        <!-- Examens -->
         <div class="tab-pane" id="exams">
             {% for exam in exams %}
             <div class="exam-card">
                 <div class="exam-header">
-                    <h4>{{ exam.type }} - {{ exam.date|date:"d/m/Y" }}</h4>
-                    <span class="exam-status">
-                        {% if exam.results_available %}
-                        <i class="fas fa-check-circle"></i> Résultats disponibles
+                    <h4>{{ exam.get_exam_type_display }} - {{ exam.requested_at|date:"d/m/Y" }}</h4>
+                    <span class="exam-status {% if exam.completed_at %}completed{% else %}pending{% endif %}">
+                        {% if exam.completed_at %}
+                        <i class="fas fa-check-circle"></i> Complété
                         {% else %}
                         <i class="fas fa-hourglass-half"></i> En attente
                         {% endif %}
                     </span>
                 </div>
                 <div class="exam-details">
-                    <p><strong>Demandé par :</strong> {{ exam.requested_by }}</p>
-                    <p><strong>Lieu :</strong> {{ exam.location }}</p>
+                    <p><strong>Demandé par :</strong> Dr. {{ exam.requested_by.get_full_name }}</p>
+                    {% if exam.completed_at %}
+                    <p><strong>Complété le :</strong> {{ exam.completed_at|date:"d/m/Y" }}</p>
+                    {% endif %}
                     {% if exam.notes %}
                     <p><strong>Notes :</strong> {{ exam.notes }}</p>
                     {% endif %}
                 </div>
-                {% if exam.results_available %}
+                {% if exam.results %}
                 <div class="exam-results">
                     <h5><i class="fas fa-file-medical"></i> Résultats :</h5>
-                    <p>{{ exam.results_summary }}</p>
-                    <a href="{% url 'view_exam_results' exam.id %}" class="btn btn-view-results">
-                        <i class="fas fa-eye"></i> Voir les résultats complets
-                    </a>
+                    <p>{{ exam.results|linebreaks }}</p>
                 </div>
                 {% endif %}
+                <div class="exam-actions">
+                    {% if exam.results %}
+                    <a href="{% url 'download_exam_results' exam.id %}" class="btn btn-primary">
+                        <i class="fas fa-download"></i> Télécharger
+                    </a>
+                    {% endif %}
+                </div>
             </div>
             {% empty %}
             <div class="empty-state">
@@ -175,22 +254,331 @@
     </div>
 </div>
 
+<style>
+    :root {
+        --medical-green: #2E7D32;
+        --green-light: #81C784;
+        --green-lighter: #E8F5E9;
+        --white: #FFFFFF;
+        --gray-light: #F5F5F5;
+        --gray-medium: #E0E0E0;
+        --gray-dark: #757575;
+        --text-dark: #212121;
+    }
+    
+    .patient-container {
+        max-width: 1200px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+    
+    .patient-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--gray-medium);
+    }
+    
+    .patient-profile {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+    }
+    
+    .avatar {
+        font-size: 3rem;
+        color: var(--medical-green);
+    }
+    
+    .profile-info h2 {
+        margin: 0;
+        color: var(--medical-green);
+    }
+    
+    .profile-info p {
+        margin: 0.5rem 0 0 0;
+        color: var(--gray-dark);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .btn {
+        padding: 0.8rem 1.5rem;
+        border-radius: 6px;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        text-decoration: none;
+        transition: all 0.3s;
+    }
+    
+    .btn-primary {
+        background: var(--medical-green);
+        color: white;
+        border: none;
+    }
+    
+    .btn-primary:hover {
+        background: #1B5E20;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(46, 125, 50, 0.3);
+    }
+    
+    .btn-secondary {
+        background: var(--gray-light);
+        color: var(--text-dark);
+        border: 1px solid var(--gray-medium);
+    }
+    
+    .btn-secondary:hover {
+        background: var(--gray-medium);
+    }
+    
+    .medical-tabs {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 2rem;
+        border-bottom: 1px solid var(--gray-medium);
+        padding-bottom: 0.5rem;
+    }
+    
+    .tab-btn {
+        padding: 0.8rem 1.5rem;
+        border: none;
+        border-radius: 6px 6px 0 0;
+        background: transparent;
+        color: var(--gray-dark);
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .tab-btn.active {
+        background: var(--medical-green);
+        color: white;
+    }
+    
+    .tab-btn:hover:not(.active) {
+        background: var(--gray-light);
+    }
+    
+    .tab-pane {
+        display: none;
+    }
+    
+    .tab-pane.active {
+        display: block;
+    }
+    
+    .info-section {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    
+    .info-section h3 {
+        color: var(--medical-green);
+        margin-top: 0;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1.5rem;
+    }
+    
+    .info-item {
+        margin-bottom: 1rem;
+    }
+    
+    .info-label {
+        font-weight: 500;
+        color: var(--gray-dark);
+        display: block;
+        margin-bottom: 0.3rem;
+    }
+    
+    .info-value {
+        color: var(--text-dark);
+    }
+    
+    .timeline {
+        position: relative;
+        padding-left: 2rem;
+    }
+    
+    .timeline::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: var(--medical-green);
+    }
+    
+    .timeline-event {
+        position: relative;
+        margin-bottom: 2rem;
+        padding-left: 2rem;
+    }
+    
+    .timeline-event::before {
+        content: '';
+        position: absolute;
+        left: -1rem;
+        top: 0.5rem;
+        width: 1rem;
+        height: 1rem;
+        border-radius: 50%;
+        background: var(--medical-green);
+    }
+    
+    .event-date {
+        font-weight: 500;
+        color: var(--medical-green);
+        margin-bottom: 0.5rem;
+    }
+    
+    .event-content {
+        background: white;
+        border-radius: 8px;
+        padding: 1rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    
+    .event-content h4 {
+        margin-top: 0;
+        color: var(--text-dark);
+    }
+    
+    .event-doctor {
+        color: var(--gray-dark);
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        color: var(--gray-dark);
+    }
+    
+    .empty-state i {
+        font-size: 2rem;
+        margin-bottom: 1rem;
+        color: var(--medical-green);
+    }
+    
+    .prescription-card, .exam-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    
+    .prescription-header, .exam-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--gray-light);
+    }
+    
+    .prescription-header h4, .exam-header h4 {
+        margin: 0;
+        color: var(--text-dark);
+    }
+    
+    .prescription-status, .exam-status {
+        font-size: 0.8rem;
+        font-weight: 500;
+        padding: 0.3rem 0.8rem;
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .active {
+        background: var(--green-lighter);
+        color: var(--medical-green);
+    }
+    
+    .pending {
+        background: #FFF3E0;
+        color: #EF6C00;
+    }
+    
+    .completed {
+        background: #E8F5E9;
+        color: #2E7D32;
+    }
+    
+    .prescription-doctor, .exam-details {
+        color: var(--gray-dark);
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .prescription-medication, .prescription-instructions, .exam-results {
+        margin-bottom: 1rem;
+    }
+    
+    .prescription-medication h5, .prescription-instructions h5, .exam-results h5 {
+        color: var(--medical-green);
+        margin: 0 0 0.5rem 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .prescription-actions, .exam-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.8rem;
+    }
+</style>
+
 <script>
 document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', function() {
-        // Gestion des onglets
+        // Remove active class from all buttons
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        
+        // Add active class to clicked button
         this.classList.add('active');
         
-        // Affichage du contenu correspondant
-        const tab = this.dataset.tab;
+        // Hide all panes
         document.querySelectorAll('.tab-pane').forEach(pane => {
             pane.classList.remove('active');
-            if (pane.id === tab) {
-                pane.classList.add('active');
-            }
         });
+        
+        // Show the corresponding pane
+        const tabId = this.dataset.tab;
+        document.getElementById(tabId).classList.add('active');
     });
 });
 </script>
 {% endblock %}
+[file content end]

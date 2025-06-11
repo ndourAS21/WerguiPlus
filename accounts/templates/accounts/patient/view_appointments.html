@@ -1,56 +1,58 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="patient-container">
-    <div class="patient-header">
+<div class="patient-container" style="background-color: #f5faf5; color: #2c3e50;">
+    <div class="patient-header" style="background-color: #27ae60; color: white; padding: 20px; border-radius: 8px;">
         <h2><i class="fas fa-calendar-alt"></i> Mes Rendez-vous</h2>
         <div class="header-actions">
-            <a href="{% url 'book_appointment' %}" class="btn btn-primary">
+            <a href="{% url 'book_appointment' %}" class="btn btn-primary" style="background-color: #16a085; color: white;">
                 <i class="fas fa-plus"></i> Nouveau Rendez-vous
             </a>
         </div>
     </div>
 
-    <div class="appointments-tabs">
-        <button class="tab-btn active" data-tab="upcoming">À Venir</button>
-        <button class="tab-btn" data-tab="past">Passés</button>
-        <button class="tab-btn" data-tab="cancelled">Annulés</button>
+    <div class="appointments-tabs" style="display: flex; margin: 20px 0; border-bottom: 1px solid #ddd;">
+        <button class="tab-btn active" data-tab="upcoming" style="flex: 1; padding: 10px; background-color: #27ae60; color: white; border: none; border-radius: 5px 0 0 5px;">À Venir</button>
+        <button class="tab-btn" data-tab="past" style="flex: 1; padding: 10px; background-color: #7f8c8d; color: white; border: none;">Passés</button>
+        <button class="tab-btn" data-tab="cancelled" style="flex: 1; padding: 10px; background-color: #e74c3c; color: white; border: none; border-radius: 0 5px 5px 0;">Annulés</button>
     </div>
 
     <div class="appointments-list">
-        {% for appointment in upcoming_appointments %}
-        <div class="appointment-card upcoming">
-            <div class="appointment-header">
-                <h3>{{ appointment.doctor.get_full_name }}</h3>
-                <span class="appointment-date">
-                    {{ appointment.date|date:"l d F Y" }} à {{ appointment.time|time }}
+        {% for appointment in appointments %}
+        <div class="appointment-card" style="background-color: white; border-radius: 8px; padding: 20px; margin-bottom: 15px; border-left: 5px solid {% if appointment.status == 'CANCELLED' %}#e74c3c{% elif appointment.is_past %}#7f8c8d{% else %}#27ae60{% endif %};">
+            <div class="appointment-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="color: #27ae60;">Dr. {{ appointment.doctor.get_full_name }}</h3>
+                <span class="appointment-status" style="background-color: {% if appointment.status == 'CANCELLED' %} #e74c3c {% elif appointment.is_past %}#7f8c8d{% else %}#27ae60{% endif %}; color: white; padding: 3px 8px; border-radius: 12px; font-size: 0.8em;">
+                    {% if appointment.status == 'CANCELLED' %}Annulé{% elif appointment.is_past %}Passé{% else %}Confirmé{% endif %}
                 </span>
             </div>
             
-            <div class="appointment-details">
-                <p><i class="fas fa-map-marker-alt"></i> {{ appointment.location }}</p>
-                <p><i class="fas fa-stethoscope"></i> {{ appointment.reason }}</p>
+            <div class="appointment-details" style="margin-top: 10px;">
+                <p style="margin: 5px 0;"><i class="fas fa-calendar-day" style="color: #27ae60;"></i> {{ appointment.date|date:"l d F Y" }} à {{ appointment.time|time:"H:i" }}</p>
+                <p style="margin: 5px 0;"><i class="fas fa-stethoscope" style="color: #27ae60;"></i> {{ appointment.get_reason_display }}</p>
                 
                 {% if appointment.notes %}
-                <div class="appointment-notes">
-                    <p><i class="fas fa-notes-medical"></i> {{ appointment.notes }}</p>
+                <div class="appointment-notes" style="background-color: #f8f9fa; padding: 10px; border-radius: 5px; margin-top: 10px;">
+                    <p style="margin: 0;"><i class="fas fa-notes-medical" style="color: #27ae60;"></i> {{ appointment.notes }}</p>
                 </div>
                 {% endif %}
             </div>
             
-            <div class="appointment-actions">
-                <a href="{% url 'cancel_appointment' appointment.id %}" class="btn btn-cancel">
+            {% if appointment.status != 'CANCELLED' and not appointment.is_past %}
+            <div class="appointment-actions" style="display: flex; gap: 10px; margin-top: 15px;">
+                <a href="{% url 'cancel_appointment' appointment.id %}" class="btn btn-cancel" style="background-color: #e74c3c; color: white; padding: 8px 15px; border-radius: 4px; text-decoration: none;">
                     <i class="fas fa-times"></i> Annuler
                 </a>
-                <a href="{% url 'reschedule_appointment' appointment.id %}" class="btn btn-reschedule">
+                <a href="{% url 'reschedule_appointment' appointment.id %}" class="btn btn-reschedule" style="background-color: #f39c12; color: white; padding: 8px 15px; border-radius: 4px; text-decoration: none;">
                     <i class="fas fa-calendar-alt"></i> Reporter
                 </a>
             </div>
+            {% endif %}
         </div>
         {% empty %}
-        <div class="empty-state">
-            <i class="fas fa-calendar-times"></i>
-            <p>Aucun rendez-vous à venir</p>
+        <div class="empty-state" style="text-align: center; padding: 40px; background-color: white; border-radius: 8px;">
+            <i class="fas fa-calendar-times" style="font-size: 3em; color: #7f8c8d;"></i>
+            <p style="margin-top: 15px; font-size: 1.2em;">Aucun rendez-vous à afficher</p>
         </div>
         {% endfor %}
     </div>
@@ -59,12 +61,24 @@
 <script>
 document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', function() {
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        this.classList.add('active');
+        // Mettre à jour l'interface
+        document.querySelectorAll('.tab-btn').forEach(b => {
+            b.style.backgroundColor = '#7f8c8d';
+            if (b.dataset.tab === 'upcoming') b.style.borderRadius = '5px 0 0 5px';
+            else if (b.dataset.tab === 'cancelled') b.style.borderRadius = '0 5px 5px 0';
+            else b.style.borderRadius = '0';
+        });
         
-        const tab = this.dataset.tab;
-        // Ici, vous implémenteriez le chargement des rendez-vous par catégorie
-        alert(`Chargement des rendez-vous ${tab}...`);
+        this.style.backgroundColor = this.dataset.tab === 'upcoming' ? '#27ae60' : 
+                                    this.dataset.tab === 'past' ? '#7f8c8d' : '#e74c3c';
+        
+        // Ici, vous implémenteriez le chargement des rendez-vous par catégorie via AJAX
+        fetch(`/api/appointments/?status=${this.dataset.tab}`)
+            .then(response => response.json())
+            .then(data => {
+                // Mettre à jour la liste des rendez-vous
+                console.log(`Chargement des rendez-vous ${this.dataset.tab}`, data);
+            });
     });
 });
 </script>

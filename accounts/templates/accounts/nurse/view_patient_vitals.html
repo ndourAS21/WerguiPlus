@@ -1,94 +1,123 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="nurse-container">
-    <div class="nurse-header">
+<div class="nurse-container" style="background-color: #f5faf5; color: #2c3e50; min-height: 100vh;">
+    <div class="nurse-header" style="background-color: #27ae60; color: white; padding: 20px; border-radius: 8px 8px 0 0;">
         <h2><i class="fas fa-heartbeat"></i> Suivi des Constantes Vitales</h2>
-        <div class="patient-info">
-            <div class="patient-avatar">
-                <i class="fas fa-user-circle"></i>
+        <div class="patient-info" style="display: flex; align-items: center; margin-top: 15px;">
+            <div class="patient-avatar" style="margin-right: 15px;">
+                <i class="fas fa-user-circle" style="font-size: 3em;"></i>
             </div>
             <div>
-                <h3>{{ patient.get_full_name }}</h3>
-                <p><i class="fas fa-id-badge"></i> {{ patient.id_number }} | <i class="fas fa-bed"></i> Chambre {{ patient.room_number }}</p>
+                <h3 style="margin: 0;">{{ patient.get_full_name }}</h3>
+                <p style="margin: 5px 0;">
+                    <i class="fas fa-id-badge"></i> {{ patient.id_number }} | 
+                    <i class="fas fa-bed"></i> Chambre {{ patient.room_number|default:"N/A" }}
+                </p>
+                <p style="margin: 5px 0;">
+                    <i class="fas fa-user-md"></i> Médecin: Dr. {{ patient.patient_record.primary_doctor.get_full_name }}
+                </p>
             </div>
         </div>
     </div>
 
-    <div class="vitals-container">
-        <div class="vitals-chart">
-            <h3><i class="fas fa-chart-line"></i> Historique des Constantes</h3>
-            <div class="chart-placeholder">
-                <!-- Graphique serait implémenté avec Chart.js ou autre -->
-                <p>Graphique d'évolution des constantes</p>
-            </div>
-        </div>
-        
-        <div class="vitals-current">
-            <h3><i class="fas fa-clock"></i> Dernières Mesures</h3>
-            <div class="vitals-grid">
-                <div class="vital-card">
-                    <div class="vital-icon temperature">
-                        <i class="fas fa-thermometer-half"></i>
+    <div class="vitals-container" style="background-color: white; padding: 20px; border-radius: 0 0 8px 8px; margin-bottom: 20px;">
+        <div class="vitals-current" style="margin-bottom: 30px;">
+            <h3 style="color: #27ae60; border-bottom: 2px solid #27ae60; padding-bottom: 5px;">
+                <i class="fas fa-clock"></i> Dernières Mesures
+            </h3>
+            <div class="vitals-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px; margin-top: 15px;">
+                <div class="vital-card" style="border: 1px solid #ddd; border-radius: 8px; padding: 15px; background-color: #f8f9fa;">
+                    <div class="vital-icon" style="display: flex; align-items: center; margin-bottom: 10px;">
+                        <i class="fas fa-thermometer-half" style="color: #e74c3c; font-size: 1.5em; margin-right: 10px;"></i>
+                        <h4 style="margin: 0;">Température</h4>
                     </div>
                     <div class="vital-info">
-                        <h4>Température</h4>
-                        <p class="vital-value {% if last_vitals.temperature > 38 %}critical{% endif %}">
+                        <p class="vital-value" style="font-size: 1.5em; font-weight: bold; margin: 5px 0; color: {% if last_vitals.temperature and last_vitals.temperature > 38 %}#e74c3c{% else %}#27ae60{% endif %}">
                             {{ last_vitals.temperature|default:"--" }}°C
                         </p>
-                        <p class="vital-time">{{ last_vitals.time|default:"" }}</p>
+                        <p class="vital-time" style="font-size: 0.9em; color: #7f8c8d; margin: 0;">
+                            {{ last_vitals.time|default:"Non mesurée" }}
+                        </p>
                     </div>
                 </div>
                 
-                <div class="vital-card">
-                    <div class="vital-icon heart">
-                        <i class="fas fa-heart"></i>
+                <div class="vital-card" style="border: 1px solid #ddd; border-radius: 8px; padding: 15px; background-color: #f8f9fa;">
+                    <div class="vital-icon" style="display: flex; align-items: center; margin-bottom: 10px;">
+                        <i class="fas fa-heart" style="color: #e74c3c; font-size: 1.5em; margin-right: 10px;"></i>
+                        <h4 style="margin: 0;">Fréquence Cardiaque</h4>
                     </div>
                     <div class="vital-info">
-                        <h4>Fréquence Cardiaque</h4>
-                        <p class="vital-value {% if last_vitals.heart_rate > 100 or last_vitals.heart_rate < 50 %}critical{% endif %}">
+                        <p class="vital-value" style="font-size: 1.5em; font-weight: bold; margin: 5px 0; color: {% if last_vitals.heart_rate and last_vitals.heart_rate > 100 or last_vitals.heart_rate < 50 %}#e74c3c{% else %}#27ae60{% endif %}">
                             {{ last_vitals.heart_rate|default:"--" }} bpm
                         </p>
-                        <p class="vital-time">{{ last_vitals.time|default:"" }}</p>
+                        <p class="vital-time" style="font-size: 0.9em; color: #7f8c8d; margin: 0;">
+                            {{ last_vitals.time|default:"Non mesurée" }}
+                        </p>
                     </div>
                 </div>
                 
-                <div class="vital-card">
-                    <div class="vital-icon pressure">
-                        <i class="fas fa-tachometer-alt"></i>
+                <div class="vital-card" style="border: 1px solid #ddd; border-radius: 8px; padding: 15px; background-color: #f8f9fa;">
+                    <div class="vital-icon" style="display: flex; align-items: center; margin-bottom: 10px;">
+                        <i class="fas fa-tachometer-alt" style="color: #e74c3c; font-size: 1.5em; margin-right: 10px;"></i>
+                        <h4 style="margin: 0;">Tension Artérielle</h4>
                     </div>
                     <div class="vital-info">
-                        <h4>Tension Artérielle</h4>
-                        <p class="vital-value {% if last_vitals.systolic > 140 or last_vitals.diastolic > 90 %}critical{% endif %}">
+                        <p class="vital-value" style="font-size: 1.5em; font-weight: bold; margin: 5px 0; color: {% if last_vitals.systolic and last_vitals.systolic > 140 or last_vitals.diastolic and last_vitals.diastolic > 90 %}#e74c3c{% else %}#27ae60{% endif %}">
                             {{ last_vitals.systolic|default:"--" }}/{{ last_vitals.diastolic|default:"--" }} mmHg
                         </p>
-                        <p class="vital-time">{{ last_vitals.time|default:"" }}</p>
+                        <p class="vital-time" style="font-size: 0.9em; color: #7f8c8d; margin: 0;">
+                            {{ last_vitals.time|default:"Non mesurée" }}
+                        </p>
                     </div>
                 </div>
                 
-                <div class="vital-card">
-                    <div class="vital-icon oxygen">
-                        <i class="fas fa-lungs"></i>
+                <div class="vital-card" style="border: 1px solid #ddd; border-radius: 8px; padding: 15px; background-color: #f8f9fa;">
+                    <div class="vital-icon" style="display: flex; align-items: center; margin-bottom: 10px;">
+                        <i class="fas fa-lungs" style="color: #e74c3c; font-size: 1.5em; margin-right: 10px;"></i>
+                        <h4 style="margin: 0;">Saturation O₂</h4>
                     </div>
                     <div class="vital-info">
-                        <h4>Saturation O₂</h4>
-                        <p class="vital-value {% if last_vitals.oxygen < 92 %}critical{% endif %}">
+                        <p class="vital-value" style="font-size: 1.5em; font-weight: bold; margin: 5px 0; color: {% if last_vitals.oxygen and last_vitals.oxygen < 92 %}#e74c3c{% else %}#27ae60{% endif %}">
                             {{ last_vitals.oxygen|default:"--" }}%
                         </p>
-                        <p class="vital-time">{{ last_vitals.time|default:"" }}</p>
+                        <p class="vital-time" style="font-size: 0.9em; color: #7f8c8d; margin: 0;">
+                            {{ last_vitals.time|default:"Non mesurée" }}
+                        </p>
                     </div>
                 </div>
             </div>
         </div>
+
+        <div class="vitals-history" style="margin-top: 30px;">
+            <h3 style="color: #27ae60; border-bottom: 2px solid #27ae60; padding-bottom: 5px;">
+                <i class="fas fa-history"></i> Historique Médical
+            </h3>
+            <div class="medical-history" style="max-height: 300px; overflow-y: auto; margin-top: 15px; padding: 10px; border: 1px solid #ddd; border-radius: 5px; background-color: white;">
+                {% for line in record.medical_history.splitlines %}
+                    <p style="margin: 5px 0; padding: 5px; border-bottom: 1px solid #eee; {% if 'Constantes du' in line %}background-color: #f8f9fa;{% endif %}">
+                        {{ line }}
+                    </p>
+                {% empty %}
+                    <p style="text-align: center; color: #7f8c8d;">Aucun historique médical disponible</p>
+                {% endfor %}
+            </div>
+        </div>
     </div>
 
-    <div class="vitals-actions">
-        <a href="{% url 'quick_vitals' patient.id %}" class="btn btn-primary">
+    <div class="vitals-actions" style="display: flex; justify-content: space-between; background-color: white; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+        <a href="{% url 'quick_vitals' patient.id %}" class="btn btn-primary" 
+           style="background-color: #27ae60; color: white; padding: 10px 20px; border: none; border-radius: 4px; text-decoration: none;">
             <i class="fas fa-plus"></i> Ajouter des Mesures
         </a>
-        <a href="{% url 'patient_report' patient.id %}" class="btn btn-secondary">
-            <i class="fas fa-file-pdf"></i> Générer Rapport
+        <a href="{% url 'record_care' %}" class="btn btn-secondary"
+           style="background-color: #3498db; color: white; padding: 10px 20px; border: none; border-radius: 4px; text-decoration: none;">
+            <i class="fas fa-hand-holding-medical"></i> Enregistrer des Soins
         </a>
+<a href="{% url 'administer_medication' patient.id %}" class="btn btn-emergency"
+   style="background-color: #e74c3c; color: white; padding: 10px 20px; border: none; border-radius: 4px; text-decoration: none;">
+    <i class="fas fa-pills"></i> Administrer Médicament
+</a>
     </div>
 </div>
 {% endblock %}
