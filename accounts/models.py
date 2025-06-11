@@ -72,7 +72,6 @@ class PatientRecord(models.Model):
                                      related_name='primary_patients', limit_choices_to={'role': 'DOCTOR'})
     last_consultation = models.DateField(null=True, blank=True)
     next_appointment = models.DateField(null=True, blank=True)
-        # ... autres champs existants ...
     is_critical = models.BooleanField(default=False)
     critical_since = models.DateTimeField(null=True, blank=True)
     critical_reason = models.TextField(blank=True)
@@ -260,11 +259,13 @@ class Appointment(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
-    @property
-    def is_past(self):
-        from django.utils import timezone
-        appointment_datetime = datetime.combine(self.date, self.time)
-        return appointment_datetime < timezone.now()
+@property
+def is_past(self):
+    from django.utils import timezone
+    appointment_datetime = datetime.combine(self.date, self.time)
+    # Convertir en datetime aware
+    appointment_datetime = timezone.make_aware(appointment_datetime)
+    return appointment_datetime < timezone.now()
     
     def __str__(self):
         return f"Rdv {self.date} {self.time} - {self.patient} avec Dr. {self.doctor}"
@@ -274,3 +275,55 @@ class Appointment(models.Model):
     def is_past(self):
         appointment_datetime = datetime.combine(self.date, self.time)
         return appointment_datetime < timezone.now()
+    
+
+
+class Supplier(models.Model):
+    name = models.CharField(max_length=100)
+    contact_email = models.EmailField()
+    contact_phone = models.CharField(max_length=20)
+    delivery_time = models.PositiveIntegerField(help_text="Délai de livraison en jours")
+    shipping_cost = models.DecimalField(max_digits=10, decimal_places=2)
+
+    def __str__(self):
+        return self.name
+
+class Medication(models.Model):
+    name = models.CharField(max_length=100)
+    code = models.CharField(max_length=20, unique=True)
+    dosage = models.CharField(max_length=50)
+    stock = models.PositiveIntegerField(default=0)
+    max_stock = models.PositiveIntegerField()
+    threshold = models.PositiveIntegerField()
+    supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE)
+    unit_price = models.DecimalField(max_digits=10, decimal_places=2)
+
+    def __str__(self):
+        return f"{self.name} {self.dosage}"
+
+class Order(models.Model):
+    STATUS_CHOICES = [
+        ('PENDING', 'En attente'),
+        ('CONFIRMED', 'Confirmée'),
+        ('DELIVERED', 'Livrée'),
+        ('CANCELLED', 'Annulée'),
+    ]
+    
+    pharmacist = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE)
+    order_date = models.DateTimeField(auto_now_add=True)
+    delivery_date = models.DateTimeField(null=True, blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
+    notes = models.TextField(blank=True)
+    
+    def __str__(self):
+        return f"Commande #{self.id} - {self.supplier.name}"
+
+class OrderItem(models.Model):
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items')
+    medication = models.ForeignKey(Medication, on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField()
+    unit_price = models.DecimalField(max_digits=10, decimal_places=2)
+    
+    def __str__(self):
+        return f"{self.quantity}x {self.medication.name} (Commande #{self.order.id})"

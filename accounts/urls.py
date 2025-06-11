@@ -1,6 +1,7 @@
 # accounts/urls.py
 from django.urls import path
 from . import views
+from .views import process_order
 
 
 
@@ -46,6 +47,9 @@ urlpatterns = [
     path('pharmacist/view-inventory/', views.view_inventory, name='view_inventory'),
     path('pharmacist/request-reorder/', views.request_reorder, name='request_reorder'),
     
+    path('pharmacist/process-order/', views.process_order, name='process_order'),  # ADD THIS LINE
+    path('pharmacist/view-order/<int:order_id>/', views.view_order_detail, name='view_order_detail'),
+    path('pharmacist/view-orders/', views.view_orders, name='view_orders'),
     # Admin
     path('admin/manage-users/', views.manage_users, name='manage_users'),
     path('admin/security-settings/', views.security_settings, name='security_settings'),
@@ -64,4 +68,6 @@ urlpatterns = [
     path('patient/generate-excel-record/', views.generate_excel_record, name='generate_excel_record'),
     path('patient/view-appointments/', views.view_appointments, name='view_appointments'),
     path('patient/book-appointment/', views.book_appointment, name='book_appointment'),
+    path('patient/cancel-appointment/<int:appointment_id>/', views.cancel_appointment, name='cancel_appointment'),
+    path('patient/reschedule-appointment/<int:appointment_id>/', views.reschedule_appointment, name='reschedule_appointment'),
 ]

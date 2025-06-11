@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="pharmacist-container">
+    <div class="pharmacist-header">
+        <h2><i class="fas fa-check-circle"></i> Confirmation de Commande</h2>
+    </div>
+
+    <div class="confirmation-card">
+        <div class="confirmation-icon">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        <div class="confirmation-content">
+            <h3>Commande #{{ order.id }} enregistrée avec succès!</h3>
+            <p>Fournisseur: {{ order.supplier.name }}</p>
+            <p>Date: {{ order.order_date|date:"d/m/Y H:i" }}</p>
+            <p>Statut: <span class="status-badge">{{ order.get_status_display }}</span></p>
+            
+            <div class="order-details">
+                <h4>Détails de la commande:</h4>
+                <ul>
+                    {% for item in order.items.all %}
+                    <li>{{ item.quantity }} x {{ item.medication.name }} - {{ item.medication.dosage }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            
+            <div class="confirmation-actions">
+                <a href="{% url 'view_inventory' %}" class="btn-pharmacist">
+                    <i class="fas fa-warehouse"></i> Retour à l'inventaire
+                </a>
+                <a href="{% url 'request_reorder' %}" class="btn-pharmacist-outline">
+                    <i class="fas fa-plus"></i> Nouvelle commande
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .confirmation-card {
+        background-color: white;
+        border-radius: 10px;
+        padding: 2rem;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        display: flex;
+        align-items: center;
+        gap: 2rem;
+    }
+    
+    .confirmation-icon {
+        font-size: 5rem;
+        color: var(--medical-green);
+    }
+    
+    .confirmation-content {
+        flex-grow: 1;
+    }
+    
+    .status-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 50px;
+        background-color: 
+            {% if order.status == 'PENDING' %}#FFC107
+            {% elif order.status == 'CONFIRMED' %}#2196F3
+            {% elif order.status == 'DELIVERED' %}#4CAF50
+            {% else %}#F44336{% endif %};
+        color: white;
+    }
+    
+    .order-details {
+        margin-top: 1.5rem;
+        padding: 1rem;
+        background-color: #f5f5f5;
+        border-radius: 5px;
+    }
+    
+    .confirmation-actions {
+        margin-top: 2rem;
+        display: flex;
+        gap: 1rem;
+    }
+</style>
+{% endblock %}

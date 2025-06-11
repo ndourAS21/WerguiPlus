@@ -7,7 +7,8 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.conf import settings
 from django.contrib import messages
-# Ajouter ces imports en haut du fichier views.py
+from .models import Order, OrderItem, Medication, Supplier, AuditLog
+
 from django.http import HttpResponse
 from reportlab.pdfgen import canvas
 from io import BytesIO
@@ -308,14 +309,14 @@ def admin_dashboard_data(user):
                 'title': 'Configuration',
                 'buttons': [
                     {
-                        'url': 'security_settings',  # Votre vue personnalisée
+                        'url': 'admin:accounts_securitysettings_changelist', 
                         'text': 'Paramètres de sécurité', 
                         'class': 'btn-secondary',
                         'icon': 'fas fa-lock',
                         'description': 'Configurer les règles de sécurité et permissions'
                     },
                     {
-                        'url': 'system_config',  # Votre vue personnalisée
+                        'url': 'admin:accounts_systemconfig_changelist',
                         'text': 'Configuration système', 
                         'class': 'btn-secondary',
                         'icon': 'fas fa-cog',
@@ -455,7 +456,10 @@ def create_prescription(request):
 @login_required
 @role_required('PHARMACIST', 'DOCTOR', 'NURSE') 
 def view_prescriptions(request):
-    prescriptions = Prescription.objects.filter(doctor=request.user).select_related('patient')
+    if request.user.role == 'PHARMACIST':
+        prescriptions = Prescription.objects.all().select_related('patient', 'doctor')
+    else:
+        prescriptions = Prescription.objects.filter(doctor=request.user).select_related('patient')
     return render(request, 'accounts/doctor/view_prescriptions.html', {
         'prescriptions': prescriptions
     })
@@ -901,12 +905,14 @@ def get_client_ip(request):
 @login_required
 @role_required('NURSE')
 def record_care(request):
-    patients = CustomUser.objects.filter(role='PATIENT')
-    
     if request.method == 'POST':
         try:
             patient_id = request.POST.get('patient_id')
+            if not patient_id:
+                raise ValueError("Patient non spécifié")
+                
             patient = get_object_or_404(CustomUser, id=patient_id, role='PATIENT')
+        
             
             care_type = request.POST.get('care_type')
             care_time = request.POST.get('care_time')
@@ -1158,11 +1164,160 @@ def dispense_medication(request):
         Prescription.objects.select_related('patient', 'doctor'), 
         id=prescription_id
     )
-    
+              
+    AuditLog.objects.create(
+        user=request.user,
+        action='UPDATE',
+        model='Prescription',
+        object_id=prescription.id,
+        details=f"Médicament {prescription.medication} délivré à {prescription.patient.get_full_name()}",
+        ip_address=get_client_ip(request)
+         )
     return render(request, 'accounts/pharmacist/dispense_medication.html', {
         'prescription': prescription
     })
+@login_required
+@role_required('PHARMACIST')
+def process_order(request):
+    if request.method == 'POST':
+        try:
+            order_data = json.loads(request.POST.get('order_data'))
+            # Traiter la commande ici
+            
+            # Log d'audit
+            AuditLog.objects.create(
+                user=request.user,
+                action='CREATE',
+                model='Order',
+                object_id=0,  # ou l'ID de la commande créée
+                details=f"Commande de médicaments passée",
+                ip_address=get_client_ip(request)
+            )
+            
+            messages.success(request, "Commande passée avec succès!")
+            return redirect('view_inventory')
+        except Exception as e:
+            messages.error(request, f"Erreur: {str(e)}")
+            return redirect('request_reorder')
 
+@login_required
+@role_required('PHARMACIST')
+def process_order(request):
+    if request.method == 'POST':
+        try:
+            # Récupérer les données JSON
+            order_data_str = request.POST.get('order_data', '[]')
+            order_items = json.loads(order_data_str)
+            
+            # Récupérer les autres données du formulaire
+            supplier_id = request.POST.get('supplier')
+            notes = request.POST.get('notes', '')
+            
+            # Validation
+            if not order_items:
+                messages.error(request, 'Aucun médicament sélectionné pour la commande.')
+                return redirect('request_reorder')
+            
+            if not supplier_id:
+                messages.error(request, 'Veuillez sélectionner un fournisseur.')
+                return redirect('request_reorder')
+            
+            # Récupérer le fournisseur
+            supplier = get_object_or_404(Supplier, id=supplier_id)
+            
+            # Créer la commande
+            order = Order.objects.create(
+                pharmacist=request.user,
+                supplier=supplier,
+                notes=notes,
+                status='PENDING'
+            )
+            
+            # Ajouter les items de la commande
+            for item in order_items:
+                medication = get_object_or_404(Medication, id=item['medId'])
+                OrderItem.objects.create(
+                    order=order,
+                    medication=medication,
+                    quantity=item['quantity'],
+                    unit_price=item.get('unitPrice', medication.unit_price)
+                )
+            
+            # Log d'audit
+            AuditLog.objects.create(
+                user=request.user,
+                action='CREATE',
+                model='Order',
+                object_id=order.id,
+                details=f"Commande #{order.id} passée auprès de {supplier.name}",
+                ip_address=get_client_ip(request)
+            )
+            
+            messages.success(request, f"Commande #{order.id} passée avec succès!")
+            return redirect('view_orders')
+            
+        except json.JSONDecodeError:
+            messages.error(request, 'Erreur lors du traitement des données de commande.')
+            return redirect('request_reorder')
+        except Exception as e:
+            messages.error(request, f"Erreur lors du traitement de la commande: {str(e)}")
+            return redirect('request_reorder')
+    
+    return redirect('request_reorder')
+
+
+@login_required
+@role_required('PHARMACIST')
+def view_orders(request):
+    orders = Order.objects.filter(pharmacist=request.user).select_related('supplier').order_by('-order_date')
+    
+    # Statistiques
+    total_orders = orders.count()
+    pending_orders = orders.filter(status='PENDING').count()
+    delivered_orders = orders.filter(status='DELIVERED').count()
+    
+    return render(request, 'accounts/pharmacist/view_orders.html', {
+        'orders': orders,
+        'total_orders': total_orders,
+        'pending_orders': pending_orders,
+        'delivered_orders': delivered_orders,
+    })
+
+@login_required
+@role_required('PHARMACIST')
+def view_orders(request):
+    orders = Order.objects.filter(pharmacist=request.user).select_related('supplier').prefetch_related('items').order_by('-order_date')
+    
+    # Ajoutez le total à chaque commande
+    for order in orders:
+        order.total = sum(item.quantity * item.unit_price for item in order.items.all())
+    
+    # Statistiques
+    total_orders = orders.count()
+    pending_orders = orders.filter(status='PENDING').count()
+    delivered_orders = orders.filter(status='DELIVERED').count()
+    
+    return render(request, 'accounts/pharmacist/view_orders.html', {
+        'orders': orders,
+        'total_orders': total_orders,
+        'pending_orders': pending_orders,
+        'delivered_orders': delivered_orders,
+    })
+
+
+@login_required
+@role_required('PHARMACIST')
+def view_order_detail(request, order_id):
+    order = get_object_or_404(Order, id=order_id, pharmacist=request.user)
+    order_items = order.items.all().select_related('medication')
+    
+    # Calcul du total
+    order.total = sum(item.quantity * item.unit_price for item in order_items)
+    
+    return render(request, 'accounts/pharmacist/view_order_detail.html', {
+        'order': order,
+        'order_items': order_items,
+    })
 @login_required
 @role_required('PHARMACIST')
 def view_inventory(request):
@@ -1286,7 +1441,7 @@ def system_config(request):
         # Ajoutez d'autres fuseaux horaires selon vos besoins
     ]
     
-    return render(request, 'admin/system_config.html', {
+    return render(request, 'accounts/admin/system_config.html', {
         'config': config,
         'timezones': timezones
     })
@@ -1343,7 +1498,7 @@ def view_medical_record(request):
 @role_required('PATIENT')
 def download_medical_record(request):
     messages.info(request, "Fonctionnalité de téléchargement en développement")
-    return redirect('view_medical_record')
+    return redirect('view_medicalrecord')
 
 @login_required
 @role_required('PATIENT')
@@ -1409,7 +1564,42 @@ def cancel_appointment(request, appointment_id):
         'appointment': appointment
     })
 
-
+@login_required
+@role_required('PATIENT')
+def reschedule_appointment(request, appointment_id):
+    appointment = get_object_or_404(Appointment, id=appointment_id, patient=request.user)
+    
+    if request.method == 'POST':
+        try:
+            new_date = request.POST.get('date')
+            new_time = request.POST.get('time')
+            
+            # Créer un nouveau rendez-vous et annuler l'ancien
+            Appointment.objects.create(
+                patient=request.user,
+                doctor=appointment.doctor,
+                date=new_date,
+                time=new_time,
+                reason=appointment.reason,
+                custom_reason=appointment.custom_reason,
+                notes=appointment.notes,
+                status='SCHEDULED'
+            )
+            
+            appointment.status = 'CANCELLED'
+            appointment.save()
+            
+            messages.success(request, "Rendez-vous reporté avec succès!")
+            return redirect('view_appointments')
+            
+        except Exception as e:
+            messages.error(request, f"Erreur: {str(e)}")
+    
+    doctors = CustomUser.objects.filter(role='DOCTOR')
+    return render(request, 'accounts/patient/reschedule_appointment.html', {
+        'appointment': appointment,
+        'doctors': doctors
+    })
 # views.py (ajouter ces fonctions)
 
 @login_required

@@ -100,3 +100,22 @@ class SystemConfigAdmin(admin.ModelAdmin):
     def has_add_permission(self, request):
         """Empêche la création de multiples instances"""
         return False if self.model.objects.count() > 0 else super().has_add_permission(request)
+    
+
+
+from django.contrib import admin
+from .models import Supplier, Medication, Order, OrderItem
+
+@admin.register(Supplier)
+class SupplierAdmin(admin.ModelAdmin):
+    list_display = ['name', 'contact_email', 'delivery_time', 'shipping_cost']
+    search_fields = ['name', 'contact_email']
+
+@admin.register(Medication)
+class MedicationAdmin(admin.ModelAdmin):
+    list_display = ['name', 'code', 'dosage', 'stock', 'threshold', 'supplier']
+    list_filter = ['supplier']
+    search_fields = ['name', 'code']
+
+admin.site.register(Order)
+admin.site.register(OrderItem)    

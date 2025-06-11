@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+{% load order_filters %}
+{% block content %}
+<div class="pharmacist-container">
+    <div class="pharmacist-header">
+        <h2><i class="fas fa-clipboard-list"></i> Historique des Commandes</h2>
+        
+        <div class="order-stats">
+            <div class="stat-card" style="background-color: var(--green-light);">
+                <i class="fas fa-clipboard-list" style="color: var(--medical-green);"></i>
+                <div>
+                    <h3>{{ total_orders }}</h3>
+                    <p>Commandes totales</p>
+                </div>
+            </div>
+            <div class="stat-card" style="background-color: #FFF3E0;">
+                <i class="fas fa-clock" style="color: #FFA000;"></i>
+                <div>
+                    <h3>{{ pending_orders }}</h3>
+                    <p>En attente</p>
+                </div>
+            </div>
+            <div class="stat-card" style="background-color: #E8F5E9;">
+                <i class="fas fa-check-circle" style="color: var(--medical-green);"></i>
+                <div>
+                    <h3>{{ delivered_orders }}</h3>
+                    <p>Livrées</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="order-table">
+            <thead>
+                <tr>
+                    <th>N° Commande</th>
+                    <th>Date</th>
+                    <th>Fournisseur</th>
+                    <th>Statut</th>
+                    <th>Montant</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in orders %}
+                <tr>
+                    <td>#{{ order.id }}</td>
+                    <td>{{ order.order_date|date:"d/m/Y" }}</td>
+                    <td>{{ order.supplier.name }}</td>
+                    <td>
+                        <span class="status-badge status-{{ order.status|lower }}">
+                            {{ order.get_status_display }}
+                        </span>
+                    </td>
+                    <td>{{ order.items.all|sum_items }} FCFA</td>
+                    <td>
+                        <a href="{% url 'view_order_detail' order.id %}" class="btn-action btn-view" title="Détails">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                        {% if order.status == 'PENDING' %}
+                        <a href="#" class="btn-action btn-cancel" title="Annuler">
+                            <i class="fas fa-times"></i>
+                        </a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center">Aucune commande trouvée</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="pharmacist-actions">
+        <a href="{% url 'request_reorder' %}" class="btn-pharmacist">
+            <i class="fas fa-plus"></i> Nouvelle Commande
+        </a>
+    </div>
+</div>
+
+<style>
+    .pharmacist-container {
+        background: white;
+        padding: 2rem;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    
+    .pharmacist-header {
+        margin-bottom: 2rem;
+    }
+    
+    .order-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .stat-card {
+        padding: 1.5rem;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .stat-card i {
+        font-size: 2rem;
+    }
+    
+    .stat-card h3 {
+        margin: 0;
+        font-size: 1.8rem;
+    }
+    
+    .stat-card p {
+        margin: 0;
+        color: #555;
+    }
+    
+    .order-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 2rem;
+    }
+    
+    .order-table th {
+        background-color: var(--medical-green);
+        color: white;
+        padding: 12px 15px;
+        text-align: left;
+    }
+    
+    .order-table td {
+        padding: 12px 15px;
+        border-bottom: 1px solid #e0e0e0;
+    }
+    
+    .status-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 50px;
+        color: white;
+        font-weight: bold;
+    }
+    
+    .status-pending {
+        background-color: #FFC107;
+    }
+    
+    .status-confirmed {
+        background-color: #2196F3;
+    }
+    
+    .status-delivered {
+        background-color: var(--medical-green);
+    }
+    
+    .status-cancelled {
+        background-color: #F44336;
+    }
+    
+    .btn-action {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        color: white;
+        text-decoration: none;
+        margin: 0 2px;
+    }
+    
+    .btn-view {
+        background-color: var(--medical-green);
+    }
+    
+    .btn-cancel {
+        background-color: #F44336;
+    }
+    
+    .pharmacist-actions {
+        display: flex;
+        justify-content: flex-end;
+    }
+    
+    @media (max-width: 768px) {
+        .order-stats {
+            grid-template-columns: 1fr;
+        }
+        
+        .order-table {
+            display: block;
+            overflow-x: auto;
+        }
+    }
+</style>
+{% endblock %}

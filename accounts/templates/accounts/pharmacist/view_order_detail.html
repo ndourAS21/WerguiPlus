@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+{% load order_filters %}
+{% block content %}
+<div class="pharmacist-container">
+    <div class="pharmacist-header">
+        <h2><i class="fas fa-file-invoice"></i> Détails de la Commande #{{ order.id }}</h2>
+        <div class="order-status">
+            <span class="status-badge status-{{ order.status|lower }}">
+                {{ order.get_status_display }}
+            </span>
+        </div>
+    </div>
+
+    <div class="order-detail-card">
+        <div class="order-info">
+            <div class="info-row">
+                <span class="info-label">Fournisseur:</span>
+                <span class="info-value">{{ order.supplier.name }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Date de commande:</span>
+                <span class="info-value">{{ order.order_date|date:"d/m/Y H:i" }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Date de livraison:</span>
+                <span class="info-value">
+                    {% if order.delivery_date %}
+                        {{ order.delivery_date|date:"d/m/Y H:i" }}
+                    {% else %}
+                        Non livrée
+                    {% endif %}
+                </span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Notes:</span>
+                <span class="info-value">{{ order.notes|default:"Aucune note" }}</span>
+            </div>
+        </div>
+
+        <div class="order-items">
+            <h3><i class="fas fa-pills"></i> Médicaments commandés</h3>
+            <table class="items-table">
+                <thead>
+                    <tr>
+                        <th>Médicament</th>
+                        <th>Quantité</th>
+                        <th>Prix unitaire</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in order_items %}
+                    <tr>
+                        <td>{{ item.medication.name }} ({{ item.medication.dosage }})</td>
+                        <td>{{ item.quantity }}</td>
+                        <td>{{ item.unit_price }} FCFA</td>
+                        <td>{{ item.quantity|mul:item.unit_price }} FCFA</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="3" class="total-label">Total commande:</td>
+                        <td class="total-value">{{ order.total }} FCFA</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
+        <div class="order-actions">
+            <a href="{% url 'view_orders' %}" class="btn-pharmacist-outline">
+                <i class="fas fa-arrow-left"></i> Retour à la liste
+            </a>
+            {% if order.status == 'PENDING' %}
+            <button class="btn-pharmacist" id="confirm-order">
+                <i class="fas fa-check"></i> Confirmer la réception
+            </button>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+    .pharmacist-container {
+        background: white;
+        padding: 2rem;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    
+    .pharmacist-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #e0e0e0;
+    }
+    
+    .status-badge {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        border-radius: 50px;
+        font-weight: bold;
+        color: white;
+    }
+    
+    .status-pending {
+        background-color: #FFC107;
+    }
+    
+    .status-confirmed {
+        background-color: #2196F3;
+    }
+    
+    .status-delivered {
+        background-color: var(--medical-green);
+    }
+    
+    .status-cancelled {
+        background-color: #F44336;
+    }
+    
+    .order-detail-card {
+        background-color: white;
+        border-radius: 8px;
+        padding: 2rem;
+        box-shadow: 0 0 5px rgba(0,0,0,0.05);
+    }
+    
+    .order-info {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    .info-row {
+        display: flex;
+        margin-bottom: 0.5rem;
+    }
+    
+    .info-label {
+        font-weight: bold;
+        width: 150px;
+        color: #555;
+    }
+    
+    .info-value {
+        flex-grow: 1;
+    }
+    
+    .items-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 1rem 0;
+    }
+    
+    .items-table th, .items-table td {
+        padding: 12px 15px;
+        text-align: left;
+        border-bottom: 1px solid #e0e0e0;
+    }
+    
+    .items-table th {
+        background-color: #f5f5f5;
+    }
+    
+    .total-label {
+        font-weight: bold;
+        text-align: right;
+    }
+    
+    .total-value {
+        font-weight: bold;
+        font-size: 1.1rem;
+    }
+    
+    .order-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 1rem;
+        margin-top: 2rem;
+    }
+</style>
+
+<script>
+document.getElementById('confirm-order')?.addEventListener('click', function() {
+    if (confirm("Confirmer la réception de cette commande ?")) {
+        // Ici vous ajouteriez le code pour confirmer la commande via AJAX
+        alert("Commande confirmée !");
+        window.location.reload();
+    }
+});
+</script>
+{% endblock %}

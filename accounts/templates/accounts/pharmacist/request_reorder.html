@@ -97,9 +97,17 @@
             </div>
             
             <div class="order-actions">
-                <button class="btn-pharmacist btn-submit-order" disabled>
-                    <i class="fas fa-paper-plane"></i> Soumettre la Commande
-                </button>
+                <form method="post" action="{% url 'process_order' %}" class="order-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="order_data" id="order_data">
+                    <input type="hidden" name="supplier" id="hidden_supplier">
+                    <input type="hidden" name="notes" id="hidden_notes">
+                    
+                    <button type="submit" class="btn-pharmacist btn-submit-order">
+                        <i class="fas fa-paper-plane"></i> Soumettre la Commande
+                    </button>
+                </form>
+                
                 <a href="{% url 'view_inventory' %}" class="btn-pharmacist-outline">
                     <i class="fas fa-times"></i> Annuler
                 </a>
@@ -330,6 +338,47 @@
     .btn-pharmacist-outline:hover {
         background-color: #f5f5f5;
     }
+
+    .order-item {
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr 1fr 0.5fr;
+        gap: 0.5rem;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #f0f0f0;
+        align-items: center;
+    }
+
+    .item-name strong {
+        display: block;
+        color: var(--medical-green);
+    }
+
+    .item-name small {
+        color: #666;
+        font-size: 0.8rem;
+    }
+
+    .item-quantity {
+        width: 60px;
+        padding: 0.25rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        text-align: center;
+    }
+
+    .btn-remove-item {
+        background: #dc3545;
+        color: white;
+        border: none;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.8rem;
+    }
+
+    .btn-remove-item:hover {
+        background: #c82333;
+    }
 </style>
 
 <script>
@@ -417,7 +466,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         const shippingSelect = document.getElementById('supplier');
         let shipping = 0;
-        if (shippingSelect.selectedOptions[0].dataset.shipping) {
+        if (shippingSelect.selectedOptions[0] && shippingSelect.selectedOptions[0].dataset.shipping) {
             shipping = parseInt(shippingSelect.selectedOptions[0].dataset.shipping);
         }
         
@@ -428,6 +477,50 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Mettre à jour le total quand le fournisseur change
     document.getElementById('supplier').addEventListener('change', updateOrderTotal);
+
+    // Gestion de la soumission du formulaire
+    document.querySelector('.order-form').addEventListener('submit', function(e) {
+        // Vérifier qu'il y a des éléments dans la commande
+        const orderItemElements = document.querySelectorAll('.order-item');
+        
+        if (orderItemElements.length === 0) {
+            e.preventDefault();
+            alert('Veuillez ajouter au moins un médicament à la commande.');
+            return false;
+        }
+        
+        // Vérifier qu'un fournisseur est sélectionné
+        const supplierSelect = document.getElementById('supplier');
+        if (!supplierSelect.value) {
+            e.preventDefault();
+            alert('Veuillez sélectionner un fournisseur.');
+            return false;
+        }
+        
+        // Copier les valeurs des champs visibles vers les champs cachés
+        document.getElementById('hidden_supplier').value = supplierSelect.value;
+        document.getElementById('hidden_notes').value = document.getElementById('notes').value;
+        
+        // Récupérer toutes les données de commande
+        const orderItems = [];
+        orderItemElements.forEach(item => {
+            const medId = item.dataset.med;
+            const quantity = item.querySelector('.item-quantity').value;
+            const unitPriceText = item.querySelector('.item-price').textContent;
+            const unitPrice = parseInt(unitPriceText.replace(/[^\d]/g, ''));
+            
+            orderItems.push({
+                medId: medId,
+                quantity: parseInt(quantity),
+                unitPrice: unitPrice
+            });
+        });
+        
+        // Mettre les données dans le champ caché
+        document.getElementById('order_data').value = JSON.stringify(orderItems);
+        
+        return true;
+    });
 });
 </script>
 {% endblock %}

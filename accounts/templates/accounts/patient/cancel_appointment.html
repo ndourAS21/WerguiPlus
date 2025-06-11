@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="cancel-appointment-container" style="max-width: 800px; margin: 2rem auto; padding: 0 1rem;">
+    <div class="cancel-header" style="margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 1px solid rgba(0,0,0,0.1);">
+        <h2 style="color: var(--medical-green); margin-bottom: 1rem;">Annuler un rendez-vous</h2>
+        <p style="color: #666;">Vous êtes sur le point d'annuler un rendez-vous. Veuillez confirmer votre choix.</p>
+    </div>
+
+    <div class="appointment-details" style="background: white; border-radius: 10px; padding: 1.5rem; margin-bottom: 2rem; box-shadow: 0 5px 15px rgba(0,0,0,0.05); border-left: 4px solid var(--medical-green);">
+        <h3 style="color: var(--green-dark); margin-top: 0;">Détails du rendez-vous</h3>
+        
+        <div class="detail-row" style="display: flex; margin-bottom: 1rem;">
+            <span style="flex: 1; color: #666;">Médecin:</span>
+            <span style="flex: 2; font-weight: 500;">{{ appointment.doctor.get_full_name }}</span>
+        </div>
+        
+        <div class="detail-row" style="display: flex; margin-bottom: 1rem;">
+            <span style="flex: 1; color: #666;">Date:</span>
+            <span style="flex: 2; font-weight: 500;">{{ appointment.date|date:"d/m/Y" }}</span>
+        </div>
+        
+        <div class="detail-row" style="display: flex; margin-bottom: 1rem;">
+            <span style="flex: 1; color: #666;">Heure:</span>
+            <span style="flex: 2; font-weight: 500;">{{ appointment.time|time:"H:i" }}</span>
+        </div>
+        
+        <div class="detail-row" style="display: flex; margin-bottom: 1rem;">
+            <span style="flex: 1; color: #666;">Motif:</span>
+            <span style="flex: 2; font-weight: 500;">{{ appointment.reason }}</span>
+        </div>
+        
+        <div class="detail-row" style="display: flex;">
+            <span style="flex: 1; color: #666;">Statut:</span>
+            <span style="flex: 2; font-weight: 500; color: {% if appointment.status == 'PENDING' %}var(--medical-green){% else %}#f44336{% endif %}">
+                {{ appointment.get_status_display }}
+            </span>
+        </div>
+    </div>
+
+    <form method="POST" style="margin-bottom: 2rem;">
+        {% csrf_token %}
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+            <label for="cancel-reason" style="display: block; margin-bottom: 0.5rem; color: #666;">Raison de l'annulation (optionnel)</label>
+            <textarea id="cancel-reason" name="cancel_reason" rows="3" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 6px; resize: vertical;"></textarea>
+        </div>
+        
+        <div class="action-buttons" style="display: flex; gap: 1rem;">
+            <button type="submit" class="btn-confirm" style="flex: 1; padding: 0.8rem; background: #f44336; color: white; border: none; border-radius: 6px; font-weight: 500; cursor: pointer; transition: all 0.3s ease;">
+                <i class="fas fa-calendar-times" style="margin-right: 8px;"></i> Confirmer l'annulation
+            </button>
+            <a href="{% url 'view_appointments' %}" class="btn-cancel" style="flex: 1; padding: 0.8rem; background: var(--green-soft); color: var(--medical-green); border: 1px solid rgba(76, 175, 80, 0.3); border-radius: 6px; font-weight: 500; text-decoration: none; text-align: center; transition: all 0.3s ease;">
+                <i class="fas fa-arrow-left" style="margin-right: 8px;"></i> Retour
+            </a>
+        </div>
+    </form>
+
+    <div class="warning-message" style="background: #fff3e0; padding: 1rem; border-radius: 6px; border-left: 4px solid #ffa000;">
+        <h4 style="margin-top: 0; color: #ff6d00;">
+            <i class="fas fa-exclamation-triangle" style="margin-right: 8px;"></i> Important
+        </h4>
+        <p style="margin-bottom: 0; color: #666;">
+            L'annulation d'un rendez-vous moins de 24 heures à l'avance peut être soumise à des frais selon notre politique d'annulation.
+        </p>
+    </div>
+</div>
+
+<style>
+    .btn-confirm:hover {
+        background: #d32f2f !important;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(244, 67, 54, 0.3);
+    }
+    
+    .btn-cancel:hover {
+        background: var(--medical-green) !important;
+        color: white !important;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
+    }
+    
+    @media (max-width: 600px) {
+        .action-buttons {
+            flex-direction: column;
+        }
+        
+        .detail-row {
+            flex-direction: column;
+        }
+        
+        .detail-row span:first-child {
+            margin-bottom: 0.25rem;
+        }
+    }
+</style>
+{% endblock content %}

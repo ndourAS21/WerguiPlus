@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="patient-container" style="background-color: #f5faf5; color: #2c3e50; padding: 20px;">
+    <div class="patient-header" style="background-color: #27ae60; color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+        <h2><i class="fas fa-calendar-alt"></i> Reporter un Rendez-vous</h2>
+    </div>
+
+    <div class="reschedule-form" style="background-color: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="form-group" style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px; color: #2c3e50;">Médecin</label>
+                <input type="text" value="Dr. {{ appointment.doctor.get_full_name }}" readonly style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+            </div>
+            
+            <div class="form-group" style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px; color: #2c3e50;">Nouvelle date</label>
+                <input type="date" name="date" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+            </div>
+            
+            <div class="form-group" style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px; color: #2c3e50;">Nouvelle heure</label>
+                <input type="time" name="time" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+            </div>
+            
+            <div class="form-actions" style="margin-top: 20px;">
+                <button type="submit" style="background-color: #27ae60; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer;">
+                    <i class="fas fa-calendar-check"></i> Confirmer le report
+                </button>
+                <a href="{% url 'view_appointments' %}" style="background-color: #95a5a6; color: white; padding: 10px 20px; border-radius: 4px; text-decoration: none; margin-left: 10px;">
+                    Annuler
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
