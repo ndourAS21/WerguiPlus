@@ -1,102 +1,270 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="nurse-container" style="background-color: #f5faf5; color: #2c3e50; min-height: 100vh;">
-    <div class="nurse-header" style="background-color: #27ae60; color: white; padding: 20px; border-radius: 8px 8px 0 0;">
-        <h2><i class="fas fa-hand-holding-medical"></i> Enregistrement des Soins</h2>
-        <div class="patient-selector" style="margin-top: 15px;">
-            <select id="patientSelect" class="form-select" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ddd;">
-                <option value="">Sélectionnez un patient...</option>
-                {% for patient in patients %}
-                <option value="{{ patient.id }}">{{ patient.get_full_name }} - Chambre {{ patient.room_number|default:"N/A" }}</option>
-                {% endfor %}
-            </select>
-        </div>
+<div class="pharmacist-container">
+    <div class="pharmacist-header">
+        <h2><i class="fas fa-notes-medical"></i> Enregistrement des Soins</h2>
+        <p class="subtitle">Renseignez les informations sur les soins prodigués</p>
     </div>
 
-    <form method="post" class="nurse-form" style="background-color: white; padding: 20px; border-radius: 0 0 8px 8px; margin-bottom: 20px;">
-        {% csrf_token %}
-        
-        <div class="form-section" style="margin-bottom: 20px;">
-            <h3 style="color: #27ae60; border-bottom: 2px solid #27ae60; padding-bottom: 5px;"><i class="fas fa-clipboard-list"></i> Type de Soin</h3>
-            <div class="form-row" style="display: flex; gap: 15px; margin-bottom: 15px;">
-                <div class="form-group" style="flex: 1;">
-                    <label for="care_type" style="display: block; margin-bottom: 5px; font-weight: bold;">Type de soin</label>
-                    <select id="care_type" name="care_type" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-                        <option value="">Sélectionner...</option>
-                        <option value="DRESSING">Pansement</option>
-                        <option value="INJECTION">Injection</option>
-                        <option value="PERFUSION">Perfusion</option>
-                        <option value="HYGIENE">Soin d'hygiène</option>
-                        <option value="OTHER">Autre</option>
-                    </select>
-                </div>
-                <div class="form-group" style="flex: 1;">
-                    <label for="care_time" style="display: block; margin-bottom: 5px; font-weight: bold;">Heure du soin</label>
-                    <input type="time" id="care_time" name="care_time" required 
-                           style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;"
-                           value="{% now 'H:i' %}">
-                </div>
-            </div>
-            
-            <div class="form-group" style="margin-bottom: 15px;">
-                <label for="care_description" style="display: block; margin-bottom: 5px; font-weight: bold;">Description détaillée</label>
-                <textarea id="care_description" name="care_description" rows="4" 
-                          style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;"
-                          placeholder="Décrire le soin effectué..."></textarea>
-            </div>
+    {% if messages %}
+    <div class="messages-container">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">
+            {{ message }}
         </div>
+        {% endfor %}
+    </div>
+    {% endif %}
 
-        <div class="form-section" style="margin-bottom: 20px;">
-            <h3 style="color: #27ae60; border-bottom: 2px solid #27ae60; padding-bottom: 5px;"><i class="fas fa-comment-medical"></i> Observations</h3>
-            <div class="form-group" style="margin-bottom: 15px;">
-                <label for="observations" style="display: block; margin-bottom: 5px; font-weight: bold;">État du patient pendant le soin</label>
-                <textarea id="observations" name="observations" rows="3" 
-                          style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;"
-                          placeholder="Réactions, comportement, douleurs..."></textarea>
-            </div>
+    <div class="care-form-container">
+        <form method="post" class="care-form">
+            {% csrf_token %}
             
-            <div class="form-row" style="display: flex; gap: 15px;">
-                <div class="form-group" style="flex: 1;">
-                    <label for="pain_level" style="display: block; margin-bottom: 5px; font-weight: bold;">Niveau de douleur (0-10)</label>
-                    <input type="range" id="pain_level" name="pain_level" min="0" max="10" value="0" 
-                           style="width: 100%;"
-                           oninput="document.getElementById('painValue').textContent = this.value + '/10'">
-                    <div style="display: flex; justify-content: space-between; margin-top: 5px;">
-                        <span>0</span>
-                        <span id="painValue" style="font-weight: bold;">0/10</span>
-                        <span>10</span>
+            <div class="form-section">
+                <h3><i class="fas fa-user-injured"></i> Informations Patient</h3>
+                <div class="form-group {% if not form_data.patient_id and request.method == 'POST' %}has-error{% endif %}">
+                    <label for="patient_id">Patient *</label>
+                    <select name="patient_id" id="patient_id" class="form-select" required>
+                        <option value="">Sélectionnez un patient...</option>
+                        {% for patient in patients %}
+                        <option value="{{ patient.id }}" 
+                            {% if form_data.patient_id == patient.id|stringformat:"s" %}selected{% endif %}>
+                            {{ patient.get_full_name }} ({{ patient.phone_number }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                    {% if not form_data.patient_id and request.method == 'POST' %}
+                    <span class="error-message"><i class="fas fa-exclamation-circle"></i> Ce champ est obligatoire</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3><i class="fas fa-procedures"></i> Détails des Soins</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="care_type">Type de soin *</label>
+                        <input type="text" name="care_type" id="care_type" class="form-input" 
+                               value="{{ form_data.care_type|default:'' }}" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="pain_level">Niveau de douleur (0-10) *</label>
+                        <input type="number" name="pain_level" id="pain_level" class="form-input" 
+                               min="0" max="10" value="{{ form_data.pain_level|default:'' }}" required>
                     </div>
                 </div>
-                <div class="form-group" style="flex: 1;">
-                    <label for="medication_given" style="display: block; margin-bottom: 5px; font-weight: bold;">Médicament administré</label>
-                    <input type="text" id="medication_given" name="medication_given" 
-                           style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;"
-                           placeholder="Nom du médicament">
+
+                <div class="form-group">
+                    <label for="care_description">Description des soins *</label>
+                    <textarea name="care_description" id="care_description" class="form-textarea" 
+                              required>{{ form_data.care_description|default:'' }}</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="observations">Observations *</label>
+                    <textarea name="observations" id="observations" class="form-textarea" 
+                              required>{{ form_data.observations|default:'' }}</textarea>
                 </div>
             </div>
-        </div>
 
-        <div class="form-actions" style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
-            <button type="submit" class="btn btn-save" 
-                    style="background-color: #27ae60; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer;">
-                <i class="fas fa-save"></i> Enregistrer le Soin
-            </button>
-            <a href="{% url 'dashboard' %}" class="btn btn-cancel"
-               style="background-color: #e74c3c; color: white; padding: 10px 20px; border: none; border-radius: 4px; text-decoration: none; display: inline-block;">
-                <i class="fas fa-times"></i> Annuler
-            </a>
-        </div>
-    </form>
+            <div class="form-section">
+                <h3><i class="fas fa-pills"></i> Médication (optionnel)</h3>
+                <div class="form-group">
+                    <label for="medication_given">Médicament administré</label>
+                    <input type="text" name="medication_given" id="medication_given" class="form-input" 
+                           value="{{ form_data.medication_given|default:'' }}">
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Enregistrer
+                </button>
+                <a href="{% url 'dashboard' %}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Annuler
+                </a>
+            </div>
+        </form>
+    </div>
 </div>
 
-<script>
-document.getElementById('patientSelect').addEventListener('change', function() {
-    const patientId = this.value;
-    if (patientId) {
-        // Ici vous pourriez charger les informations du patient via AJAX
-        console.log("Patient sélectionné:", patientId);
+<style>
+    .pharmacist-container {
+        background: white;
+        padding: 2rem;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.05);
+        max-width: 1000px;
+        margin: 0 auto;
     }
-});
-</script>
+
+    .pharmacist-header {
+        margin-bottom: 2rem;
+        border-bottom: 1px solid #e0e0e0;
+        padding-bottom: 1rem;
+    }
+
+    .pharmacist-header h2 {
+        color: var(--medical-green);
+        margin: 0;
+    }
+
+    .subtitle {
+        color: #666;
+        margin: 0.5rem 0 0 0;
+    }
+
+    .care-form-container {
+        background: white;
+        border-radius: 8px;
+        padding: 1.5rem;
+    }
+
+    .form-section {
+        margin-bottom: 2rem;
+        padding: 1.5rem;
+        background-color: #f9f9f9;
+        border-radius: 8px;
+        border-left: 4px solid var(--medical-green);
+    }
+
+    .form-section h3 {
+        color: var(--medical-green);
+        margin-top: 0;
+        margin-bottom: 1.5rem;
+        font-size: 1.2rem;
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: #444;
+    }
+
+    .form-select, .form-input, .form-textarea {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 1rem;
+        transition: border-color 0.3s;
+    }
+
+    .form-select {
+        background-color: white;
+    }
+
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+        border-color: var(--medical-green);
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+    }
+
+    .form-textarea {
+        min-height: 120px;
+        resize: vertical;
+    }
+
+    .has-error .form-select, .has-error .form-input {
+        border-color: #f44336;
+    }
+
+    .error-message {
+        color: #f44336;
+        font-size: 0.9rem;
+        margin-top: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 1rem;
+        margin-top: 2rem;
+    }
+
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: 4px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        border: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-primary {
+        background-color: var(--medical-green);
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background-color: var(--green-dark);
+        transform: translateY(-2px);
+    }
+
+    .btn-secondary {
+        background-color: #f5f5f5;
+        color: #333;
+        border: 1px solid #ddd;
+    }
+
+    .btn-secondary:hover {
+        background-color: #e0e0e0;
+    }
+
+    .messages-container {
+        margin-bottom: 2rem;
+    }
+
+    .alert {
+        padding: 1rem;
+        border-radius: 4px;
+        margin-bottom: 1rem;
+    }
+
+    .alert-error {
+        background-color: #ffebee;
+        color: #f44336;
+        border-left: 4px solid #f44336;
+    }
+
+    .alert-success {
+        background-color: #e8f5e9;
+        color: var(--medical-green);
+        border-left: 4px solid var(--medical-green);
+    }
+
+    @media (max-width: 768px) {
+        .form-row {
+            grid-template-columns: 1fr;
+        }
+        
+        .pharmacist-container {
+            padding: 1rem;
+        }
+        
+        .form-section {
+            padding: 1rem;
+        }
+    }
+</style>
 {% endblock %}

@@ -905,6 +905,9 @@ def get_client_ip(request):
 @login_required
 @role_required('NURSE')
 def record_care(request):
+    # Récupérer tous les patients
+    patients = CustomUser.objects.filter(role='PATIENT').order_by('last_name', 'first_name')
+    
     if request.method == 'POST':
         try:
             patient_id = request.POST.get('patient_id')
@@ -912,7 +915,6 @@ def record_care(request):
                 raise ValueError("Patient non spécifié")
                 
             patient = get_object_or_404(CustomUser, id=patient_id, role='PATIENT')
-        
             
             care_type = request.POST.get('care_type')
             care_time = request.POST.get('care_time')
@@ -921,7 +923,7 @@ def record_care(request):
             pain_level = request.POST.get('pain_level')
             medication_given = request.POST.get('medication_given')
             
-            record = PatientRecord.objects.get(patient=patient)
+            record, created = PatientRecord.objects.get_or_create(patient=patient)
             record.medical_history += f"\n\nSoins du {timezone.now().strftime('%d/%m/%Y %H:%M')}:\n"
             record.medical_history += f"Type: {care_type}\n"
             record.medical_history += f"Description: {care_description}\n"
@@ -945,6 +947,7 @@ def record_care(request):
             
         except Exception as e:
             messages.error(request, f"Erreur: {str(e)}")
+            return redirect('record_care')
     
     return render(request, 'accounts/nurse/record_care.html', {
         'patients': patients
