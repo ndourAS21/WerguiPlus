@@ -173,6 +173,12 @@ class SystemConfig(models.Model):
         verbose_name=_("Fréquence de sauvegarde")
     )
     backup_location = models.CharField(max_length=255, default="/backups", verbose_name=_("Emplacement de sauvegarde"))
+    
+        # Audit
+    audit_retention_days = models.PositiveIntegerField(default=2555, verbose_name=_("Rétention des audits (jours)"))  # 7 ans
+    detailed_logging = models.BooleanField(default=True, verbose_name=_("Journalisation détaillée"))
+
+
 
     def __str__(self):
         return f"Configuration système - {self.site_name}"

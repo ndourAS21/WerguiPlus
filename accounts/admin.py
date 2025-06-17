@@ -95,6 +95,10 @@ class SystemConfigAdmin(admin.ModelAdmin):
         ('Sauvegarde', {
             'fields': ('backup_frequency', 'backup_location'),
         }),
+                ('Audit', {
+            'fields': ('audit_retention_days', 'detailed_logging'),
+            'description': 'Configuration des paramètres d\'audit et de journalisation du système'
+        }),
     ]
 
     def has_add_permission(self, request):
