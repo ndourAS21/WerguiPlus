@@ -110,20 +110,20 @@ SECURE_BROWSER_XSS_FILTER = True
 # Pour Django 3.0+
 SECURE_REFERRER_POLICY = 'same-origin'
 
-# Configuration CSP (Content Security Policy) - VERSION COMPATIBLE
+# Configuration CSP 
 CONTENT_SECURITY_POLICY = {
     'DIRECTIVES': {
-        'default-src': ["'self'"],
-        'script-src': ["'self'", "'unsafe-inline'", "'unsafe-eval'"],  # Ajouté pour JS dynamique
-        'style-src': ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],  # Élargi pour les styles
-        'img-src': ["'self'", "data:", "https:", "blob:"],  # Ajouté blob: pour les images générées
-        'font-src': ["'self'", "https://fonts.gstatic.com", "data:"],  # Ajouté pour les polices web
-        'connect-src': ["'self'", "https:"],  # Élargi pour les API externes
-        'frame-src': ["'self'"],  # Changé de 'none' à 'self'
-        'object-src': ["'none'"],
-        'base-uri': ["'self'"],
-        'form-action': ["'self'"],
-        'media-src': ["'self'", "data:", "blob:"],  # Ajouté pour les médias
+        'default-src': ["'self'", "'unsafe-inline'", "'unsafe-eval'", "data:", "https:", "*"],
+        'script-src': ["'self'", "'unsafe-inline'", "'unsafe-eval'", "data:", "https:", "*"],  
+        'style-src': ["'self'", "'unsafe-inline'", "data:", "https:", "*"],
+        'img-src': ["'self'", "data:", "https:", "http:", "blob:", "*"],
+        'font-src': ["'self'", "data:", "https:", "http:", "*"],
+        'connect-src': ["'self'", "https:", "http:", "ws:", "wss:", "*"],
+        'frame-src': ["'self'", "https:", "http:", "*"],
+        'object-src': ["'self'", "data:", "*"],
+        'media-src': ["'self'", "data:", "blob:", "https:", "http:", "*"],
+        'worker-src': ["'self'", "blob:", "*"],
+        'child-src': ["'self'", "blob:", "*"],
     }
 }
 
