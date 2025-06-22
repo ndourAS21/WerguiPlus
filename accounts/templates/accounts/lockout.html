@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Compte Verrouillé - Sécurité</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --medical-green: #4CAF50;
+            --green-dark: #388E3C;
+            --green-soft: #E8F5E8;
+            --text-dark: #2c3e50;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--medical-green) 0%, var(--green-dark) 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: backgroundShift 10s ease-in-out infinite alternate;
+        }
+
+        @keyframes backgroundShift {
+            0% { background: linear-gradient(135deg, var(--medical-green) 0%, var(--green-dark) 100%); }
+            100% { background: linear-gradient(135deg, #66BB6A 0%, #2E7D32 100%); }
+        }
+
+        .lockout-container {
+            max-width: 500px;
+            margin: 2rem auto;
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .lockout-header {
+            background: linear-gradient(135deg, var(--medical-green) 0%, var(--green-dark) 100%);
+            padding: 2rem;
+            text-align: center;
+            color: white;
+        }
+
+        .lockout-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 1rem;
+        }
+
+        .lockout-logo i {
+            font-size: 2.5rem;
+            animation: shake 0.5s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .lockout-title {
+            margin: 0;
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+
+        .lockout-body {
+            padding: 2rem;
+        }
+
+        .lockout-message {
+            text-align: center;
+            color: #666;
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: rgba(244, 67, 54, 0.1);
+            border-radius: 10px;
+            border-left: 4px solid #f44336;
+        }
+
+        .lockout-message strong {
+            color: var(--text-dark);
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .countdown-container {
+            background: var(--green-soft);
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin: 2rem 0;
+            text-align: center;
+            border: 2px solid rgba(76, 175, 80, 0.3);
+        }
+
+        .countdown-title {
+            color: var(--green-dark);
+            font-weight: 600;
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .countdown-timer {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #f44336;
+            font-family: 'Courier New', monospace;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .info-section {
+            background: var(--green-soft);
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-left: 4px solid var(--medical-green);
+        }
+
+        .info-section h3 {
+            color: var(--green-dark);
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .info-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .info-list li {
+            color: var(--text-dark);
+            margin-bottom: 0.8rem;
+            padding-left: 1.5rem;
+            position: relative;
+            font-size: 0.95rem;
+        }
+
+        .info-list li::before {
+            content: '•';
+            position: absolute;
+            left: 0;
+            top: 0;
+            color: var(--medical-green);
+            font-weight: bold;
+        }
+
+        .contact-info {
+            background: rgba(33, 150, 243, 0.1);
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+            border-left: 4px solid #2196F3;
+        }
+
+        .contact-info h3 {
+            color: #1976D2;
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .contact-info p {
+            color: var(--text-dark);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .contact-info i {
+            width: 20px;
+            color: #2196F3;
+        }
+
+        .lockout-footer {
+            padding: 1.5rem 2rem;
+            text-align: center;
+            border-top: 1px solid #eee;
+            background: var(--green-soft);
+        }
+
+        .security-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: linear-gradient(135deg, var(--medical-green), var(--green-dark));
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+        }
+
+        .floating-particles {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 50%;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .floating-particles:nth-child(1) {
+            top: 20%;
+            left: 10%;
+            animation-delay: 0s;
+        }
+
+        .floating-particles:nth-child(2) {
+            top: 60%;
+            right: 10%;
+            animation-delay: 2s;
+        }
+
+        .floating-particles:nth-child(3) {
+            bottom: 20%;
+            left: 20%;
+            animation-delay: 4s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); opacity: 0.7; }
+            50% { transform: translateY(-20px) rotate(180deg); opacity: 1; }
+        }
+
+        @media (max-width: 768px) {
+            .lockout-container {
+                margin: 1rem;
+                max-width: 90%;
+            }
+            
+            .lockout-header {
+                padding: 1.5rem;
+            }
+            
+            .lockout-body {
+                padding: 1.5rem;
+            }
+            
+            .lockout-title {
+                font-size: 1.5rem;
+            }
+            
+            .countdown-timer {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-particles"></div>
+    <div class="floating-particles"></div>
+    <div class="floating-particles"></div>
+    
+    <div class="lockout-container">
+        <div class="lockout-header">
+            <div class="lockout-logo">
+                <i class="fas fa-lock"></i>
+                <h1 class="lockout-title">Compte Temporairement Verrouillé</h1>
+            </div>
+        </div>
+        
+        <div class="lockout-body">
+            <div class="lockout-message">
+                <strong>Accès suspendu pour des raisons de sécurité</strong>
+                Trop de tentatives de connexion incorrectes ont été détectées depuis votre adresse IP.
+            </div>
+
+            <div class="countdown-container">
+                <div class="countdown-title">
+                    <i class="fas fa-clock"></i>
+                    Temps restant avant déverrouillage
+                </div>
+                <div class="countdown-timer" id="countdown">59:59</div>
+            </div>
+
+            <div class="info-section">
+                <h3>
+                    <i class="fas fa-shield-alt"></i>
+                    Mesures de sécurité activées
+                </h3>
+                <ul class="info-list">
+                    <li>Verrouillage automatique après 3 tentatives échouées</li>
+                    <li>Surveillance des adresses IP suspectes</li>
+                    <li>Journalisation des tentatives d'accès</li>
+                    <li>Protection contre les attaques par force brute</li>
+                </ul>
+            </div>
+
+            <div class="contact-info">
+                <h3>
+                    <i class="fas fa-headset"></i>
+                    Besoin d'aide ?
+                </h3>
+                <p>
+                    <i class="fas fa-envelope"></i>
+                    <strong>Email :</strong> support@werguiplus.com
+                </p>
+                <p>
+                    <i class="fas fa-phone"></i>
+                    <strong>Téléphone :</strong> 77 123 45 67
+                </p>
+                <p>
+                    <i class="fas fa-clock"></i>
+                    <strong>Horaires :</strong> Lun-Ven 8h-18h
+                </p>
+            </div>
+        </div>
+
+        <div class="lockout-footer">
+            <div class="security-badge">
+                <i class="fas fa-shield-alt"></i>
+                Système de sécurité WerguiPlus
+            </div>
+            <p style="margin: 1rem 0 0 0; color: #666; font-size: 0.9rem;">
+                Votre sécurité est notre priorité. Ce système protège votre compte contre les accès non autorisés.
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Simulation du compte à rebours (1 heure = 3600 secondes)
+        let timeLeft = 3600;
+        
+        function updateCountdown() {
+            const hours = Math.floor(timeLeft / 3600);
+            const minutes = Math.floor((timeLeft % 3600) / 60);
+            const seconds = timeLeft % 60;
+            
+            const display = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            document.getElementById('countdown').textContent = display;
+            
+            if (timeLeft > 0) {
+                timeLeft--;
+            } else {
+                document.getElementById('countdown').textContent = "Déverrouillage possible";
+                document.getElementById('countdown').style.color = "var(--medical-green)";
+                // Rediriger vers la page de connexion après déverrouillage
+                setTimeout(() => {
+                    window.location.href = '/accounts/login/';
+                }, 2000);
+            }
+        }
+        
+        // Mettre à jour le compte à rebours chaque seconde
+        setInterval(updateCountdown, 1000);
+        updateCountdown(); // Initialiser immédiatement
+        
+        // Effet de particules flottantes supplémentaires
+        function createFloatingParticle() {
+            const particle = document.createElement('div');
+            particle.className = 'floating-particles';
+            particle.style.left = Math.random() * 100 + '%';
+            particle.style.animationDuration = (Math.random() * 3 + 4) + 's';
+            document.body.appendChild(particle);
+            
+            setTimeout(() => {
+                particle.remove();
+            }, 8000);
+        }
+        
+        // Créer des particules périodiquement
+        setInterval(createFloatingParticle, 3000);
+    </script>
+</body>
+</html>

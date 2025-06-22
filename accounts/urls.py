@@ -2,6 +2,9 @@
 from django.urls import path
 from . import views
 from .views import process_order
+from django.urls import path
+from django.views.generic import TemplateView
+from . import views
 
 
 
@@ -12,6 +15,7 @@ urlpatterns = [
     path('mfa-verification/', views.mfa_verification, name='mfa_verification'),
     path('dashboard/', views.dashboard, name='dashboard'),
     path('logout/', views.user_logout, name='logout'),
+    path('locked/', TemplateView.as_view(template_name='registration/lockout.html'), name='lockout'),
     
     # Médecin
     path('doctor/create-patient-record/', views.create_patient_record, name='create_patient_record'),
